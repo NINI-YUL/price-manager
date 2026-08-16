@@ -1,0 +1,28 @@
+{
+  "generatedOn": "2026-08-16",
+  "googleSource": {
+    "fileName": "google价格_get_result.xlsx",
+    "sha256": "2e848e3e9dc442bf70c66dd8d0c85e521490aebc5655185d68bb4b422305689a",
+    "sheet": "Sheet1",
+    "countryCurrencyRange": "B1:C174",
+    "tierHeaderRange": "D1:Q1",
+    "rowCount": 173
+  },
+  "cldrSource": {
+    "version": "48.2.0",
+    "enUrl": "https://raw.githubusercontent.com/unicode-org/cldr-json/48.2.0/cldr-json/cldr-localenames-full/main/en/territories.json",
+    "enSha256": "158c1d575308f7e46912edbeda435c8fe2ef5dad280798231f3a432e406b1807",
+    "zhUrl": "https://raw.githubusercontent.com/unicode-org/cldr-json/48.2.0/cldr-json/cldr-localenames-full/main/zh/territories.json",
+    "zhSha256": "18f1426f1e8981a671517a4857a8d4e56060909906c4cfd9b9a43a8a18b9ab6f"
+  },
+  "outputs": {
+    "countries": {
+      "rowCount": 173,
+      "sha256": "deb631ff05335134a09cb3c8faffef7ca3714387d8668ab9414e4c8bc271a37a"
+    },
+    "tiers": {
+      "rowCount": 14,
+      "sha256": "f3409b5e19e62ee59fc8c9e7dd1c53d8e9f8226a18a02996d42e44e8d14f8ecc"
+    }
+  }
+}

@@ -1,0 +1,174 @@
+country_code,name_cn,name_en,default_currency
+AE,阿拉伯联合酋长国,United Arab Emirates,AED
+AG,安提瓜和巴布达,Antigua & Barbuda,USD
+AL,阿尔巴尼亚,Albania,USD
+AM,亚美尼亚,Armenia,USD
+AO,安哥拉,Angola,USD
+AR,阿根廷,Argentina,USD
+AT,奥地利,Austria,EUR
+AU,澳大利亚,Australia,AUD
+AW,阿鲁巴,Aruba,USD
+AZ,阿塞拜疆,Azerbaijan,USD
+BA,波斯尼亚和黑塞哥维那,Bosnia & Herzegovina,USD
+BD,孟加拉国,Bangladesh,BDT
+BE,比利时,Belgium,EUR
+BF,布基纳法索,Burkina Faso,EUR
+BG,保加利亚,Bulgaria,EUR
+BH,巴林,Bahrain,USD
+BJ,贝宁,Benin,EUR
+BM,百慕大,Bermuda,USD
+BO,玻利维亚,Bolivia,BOB
+BR,巴西,Brazil,BRL
+BS,巴哈马,Bahamas,USD
+BW,博茨瓦纳,Botswana,USD
+BY,白俄罗斯,Belarus,USD
+BZ,伯利兹,Belize,USD
+CA,加拿大,Canada,CAD
+CD,刚果（金）,Congo - Kinshasa,USD
+CF,中非共和国,Central African Republic,EUR
+CG,刚果（布）,Congo - Brazzaville,USD
+CH,瑞士,Switzerland,CHF
+CI,科特迪瓦,Côte d’Ivoire,XOF
+CL,智利,Chile,CLP
+CM,喀麦隆,Cameroon,XAF
+CO,哥伦比亚,Colombia,COP
+CR,哥斯达黎加,Costa Rica,CRC
+CV,佛得角,Cape Verde,USD
+CY,塞浦路斯,Cyprus,EUR
+CZ,捷克,Czechia,CZK
+DE,德国,Germany,EUR
+DJ,吉布提,Djibouti,USD
+DK,丹麦,Denmark,DKK
+DM,多米尼克,Dominica,USD
+DO,多米尼加共和国,Dominican Republic,USD
+DZ,阿尔及利亚,Algeria,DZD
+EC,厄瓜多尔,Ecuador,USD
+EE,爱沙尼亚,Estonia,EUR
+EG,埃及,Egypt,EGP
+ER,厄立特里亚,Eritrea,USD
+ES,西班牙,Spain,EUR
+FI,芬兰,Finland,EUR
+FJ,斐济,Fiji,USD
+FM,密克罗尼西亚,Micronesia,USD
+FR,法国,France,EUR
+GA,加蓬,Gabon,EUR
+GB,英国,United Kingdom,GBP
+GD,格林纳达,Grenada,USD
+GE,格鲁吉亚,Georgia,GEL
+GH,加纳,Ghana,GHS
+GI,直布罗陀,Gibraltar,GBP
+GM,冈比亚,Gambia,USD
+GN,几内亚,Guinea,USD
+GR,希腊,Greece,EUR
+GT,危地马拉,Guatemala,USD
+GW,几内亚比绍,Guinea-Bissau,EUR
+HK,中国香港特别行政区,Hong Kong SAR China,HKD
+HN,洪都拉斯,Honduras,USD
+HR,克罗地亚,Croatia,EUR
+HT,海地,Haiti,USD
+HU,匈牙利,Hungary,HUF
+ID,印度尼西亚,Indonesia,IDR
+IE,爱尔兰,Ireland,EUR
+IL,以色列,Israel,ILS
+IN,印度,India,INR
+IQ,伊拉克,Iraq,IQD
+IS,冰岛,Iceland,EUR
+IT,意大利,Italy,EUR
+JM,牙买加,Jamaica,USD
+JO,约旦,Jordan,JOD
+JP,日本,Japan,JPY
+KE,肯尼亚,Kenya,KES
+KG,吉尔吉斯斯坦,Kyrgyzstan,USD
+KH,柬埔寨,Cambodia,USD
+KM,科摩罗,Comoros,USD
+KN,圣基茨和尼维斯,St. Kitts & Nevis,USD
+KR,韩国,South Korea,KRW
+KW,科威特,Kuwait,USD
+KY,开曼群岛,Cayman Islands,USD
+KZ,哈萨克斯坦,Kazakhstan,KZT
+LA,老挝,Laos,USD
+LB,黎巴嫩,Lebanon,USD
+LC,圣卢西亚,St. Lucia,USD
+LI,列支敦士登,Liechtenstein,CHF
+LK,斯里兰卡,Sri Lanka,LKR
+LR,利比里亚,Liberia,USD
+LT,立陶宛,Lithuania,EUR
+LU,卢森堡,Luxembourg,EUR
+LV,拉脱维亚,Latvia,EUR
+LY,利比亚,Libya,USD
+MA,摩洛哥,Morocco,MAD
+MC,摩纳哥,Monaco,EUR
+MD,摩尔多瓦,Moldova,USD
+MK,北马其顿,North Macedonia,USD
+ML,马里,Mali,EUR
+MM,缅甸,Myanmar (Burma),MMK
+MN,蒙古,Mongolia,MNT
+MO,中国澳门特别行政区,Macao SAR China,MOP
+MT,马耳他,Malta,EUR
+MU,毛里求斯,Mauritius,USD
+MV,马尔代夫,Maldives,USD
+MX,墨西哥,Mexico,MXN
+MY,马来西亚,Malaysia,MYR
+MZ,莫桑比克,Mozambique,USD
+NA,纳米比亚,Namibia,USD
+NE,尼日尔,Niger,EUR
+NG,尼日利亚,Nigeria,NGN
+NI,尼加拉瓜,Nicaragua,USD
+NL,荷兰,Netherlands,EUR
+NO,挪威,Norway,NOK
+NP,尼泊尔,Nepal,USD
+NZ,新西兰,New Zealand,NZD
+OM,阿曼,Oman,USD
+PA,巴拿马,Panama,USD
+PE,秘鲁,Peru,PEN
+PG,巴布亚新几内亚,Papua New Guinea,USD
+PH,菲律宾,Philippines,PHP
+PK,巴基斯坦,Pakistan,PKR
+PL,波兰,Poland,PLN
+PT,葡萄牙,Portugal,EUR
+PY,巴拉圭,Paraguay,PYG
+QA,卡塔尔,Qatar,QAR
+RO,罗马尼亚,Romania,RON
+RS,塞尔维亚,Serbia,RSD
+RU,俄罗斯,Russia,RUB
+RW,卢旺达,Rwanda,USD
+SA,沙特阿拉伯,Saudi Arabia,SAR
+SB,所罗门群岛,Solomon Islands,USD
+SC,塞舌尔,Seychelles,USD
+SE,瑞典,Sweden,SEK
+SG,新加坡,Singapore,SGD
+SI,斯洛文尼亚,Slovenia,EUR
+SK,斯洛伐克,Slovakia,EUR
+SL,塞拉利昂,Sierra Leone,USD
+SM,圣马力诺,San Marino,EUR
+SN,塞内加尔,Senegal,XOF
+SO,索马里,Somalia,USD
+SR,苏里南,Suriname,USD
+SV,萨尔瓦多,El Salvador,USD
+TC,特克斯和凯科斯群岛,Turks & Caicos Islands,USD
+TD,乍得,Chad,USD
+TG,多哥,Togo,EUR
+TH,泰国,Thailand,THB
+TJ,塔吉克斯坦,Tajikistan,USD
+TM,土库曼斯坦,Turkmenistan,USD
+TN,突尼斯,Tunisia,USD
+TO,汤加,Tonga,USD
+TR,土耳其,Türkiye,TRY
+TT,特立尼达和多巴哥,Trinidad & Tobago,USD
+TW,台湾,Taiwan,TWD
+TZ,坦桑尼亚,Tanzania,TZS
+UA,乌克兰,Ukraine,UAH
+UG,乌干达,Uganda,USD
+US,美国,United States,USD
+UY,乌拉圭,Uruguay,USD
+UZ,乌兹别克斯坦,Uzbekistan,USD
+VA,梵蒂冈,Vatican City,EUR
+VE,委内瑞拉,Venezuela,USD
+VG,英属维尔京群岛,British Virgin Islands,USD
+VN,越南,Vietnam,VND
+VU,瓦努阿图,Vanuatu,USD
+WS,萨摩亚,Samoa,USD
+YE,也门,Yemen,USD
+ZA,南非,South Africa,ZAR
+ZM,赞比亚,Zambia,USD
+ZW,津巴布韦,Zimbabwe,USD
