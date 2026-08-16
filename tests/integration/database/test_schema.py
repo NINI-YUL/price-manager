@@ -1,0 +1,195 @@
+from __future__ import annotations
+
+import sqlite3
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from src.database.connection import database_session, open_database
+from src.database.repositories import ReferenceDataRepository
+from src.database.schema import BUSINESS_TABLES, initialize_database, list_business_tables
+
+
+def test_schema_initialization_is_idempotent_and_reference_tables_are_empty(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "schema.db"
+
+    initialize_database(database_path)
+    initialize_database(database_path)
+
+    with database_session(database_path) as connection:
+        assert list_business_tables(connection) == BUSINESS_TABLES
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 1
+        assert connection.execute("SELECT COUNT(*) FROM countries").fetchone()[0] == 0
+        assert connection.execute("SELECT COUNT(*) FROM price_tiers").fetchone()[0] == 0
+
+
+def test_connection_enables_foreign_keys(tmp_path: Path) -> None:
+    connection = open_database(tmp_path / "foreign-keys.db")
+    try:
+        assert connection.execute("PRAGMA foreign_keys").fetchone()[0] == 1
+    finally:
+        connection.close()
+
+
+def test_reference_repository_inserts_and_queries_by_natural_key(tmp_path: Path) -> None:
+    database_path = tmp_path / "repository.db"
+    initialize_database(database_path)
+
+    with database_session(database_path) as connection:
+        repository = ReferenceDataRepository(connection)
+        repository.add_country(
+            country_code="JP", name_cn="日本", name_en="Japan", default_currency="JPY"
+        )
+        repository.add_price_tier(Decimal("9.99"))
+
+        assert repository.get_country("JP")["default_currency"] == "JPY"
+        assert Decimal(str(repository.get_price_tier(Decimal("9.99"))["usd_price"])) == Decimal(
+            "9.99"
+        )
+
+
+def test_transaction_rolls_back_all_writes_on_error(tmp_path: Path) -> None:
+    database_path = tmp_path / "rollback.db"
+    initialize_database(database_path)
+
+    with pytest.raises(sqlite3.IntegrityError), database_session(database_path) as connection:
+        repository = ReferenceDataRepository(connection)
+        repository.add_country(
+            country_code="US",
+            name_cn="美国",
+            name_en="United States",
+            default_currency="USD",
+        )
+        repository.add_country(
+            country_code="US",
+            name_cn="重复",
+            name_en="Duplicate",
+            default_currency="USD",
+        )
+
+    with database_session(database_path) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM countries").fetchone()[0] == 0
+
+
+def test_foreign_keys_and_price_checks_reject_invalid_rows(tmp_path: Path) -> None:
+    database_path = tmp_path / "constraints.db"
+    initialize_database(database_path)
+
+    with pytest.raises(sqlite3.IntegrityError), database_session(database_path) as connection:
+        connection.execute(
+            """
+            INSERT INTO channel_products (channel, product_id, usd_tier)
+            VALUES ('GOOGLE', 'missing-tier', 9.99)
+            """
+        )
+
+    _seed_price_dependencies(database_path)
+
+    with pytest.raises(sqlite3.IntegrityError), database_session(database_path) as connection:
+        connection.execute(
+            """
+            INSERT INTO channel_prices
+                (channel, country_code, usd_tier, currency, local_price, version_id, created_time)
+            VALUES ('IOS', 'JP', 9.99, 'JPY', 1500, 'GOOGLE_V20260816_001',
+                    '2026-08-16T23:00:00+08:00')
+            """
+        )
+
+    with database_session(database_path) as connection:
+        connection.execute(
+            """
+            INSERT INTO channel_prices
+                (channel, country_code, usd_tier, currency, local_price, version_id, created_time)
+            VALUES ('GOOGLE', 'JP', 9.99, 'JPY', 1500, 'GOOGLE_V20260816_001',
+                    '2026-08-16T23:00:00+08:00')
+            """
+        )
+        saved = connection.execute(
+            """
+            SELECT local_price FROM channel_prices
+            WHERE version_id = 'GOOGLE_V20260816_001' AND country_code = 'JP'
+            """
+        ).fetchone()
+        assert Decimal(str(saved["local_price"])) == Decimal(1500)
+
+    with pytest.raises(sqlite3.IntegrityError), database_session(database_path) as connection:
+        connection.execute(
+            """
+            INSERT INTO channel_prices
+                (channel, country_code, usd_tier, currency, local_price, version_id, created_time)
+            VALUES ('GOOGLE', 'JP', 9.99, 'JPY', -1, 'GOOGLE_V20260816_001',
+                    '2026-08-16T23:00:00+08:00')
+            """
+        )
+
+
+def test_only_one_active_version_is_allowed_per_channel(tmp_path: Path) -> None:
+    database_path = tmp_path / "active-version.db"
+    initialize_database(database_path)
+
+    with database_session(database_path) as connection:
+        _insert_version(connection, "GOOGLE_V20260816_001", "GOOGLE")
+        _insert_version(connection, "IOS_V20260816_001", "IOS")
+
+    with pytest.raises(sqlite3.IntegrityError), database_session(database_path) as connection:
+        _insert_version(connection, "GOOGLE_V20260816_002", "GOOGLE")
+
+
+@pytest.mark.parametrize("status", ["PENDING", "DONE", ""])
+def test_import_task_rejects_unknown_status(tmp_path: Path, status: str) -> None:
+    database_path = tmp_path / f"task-{status or 'empty'}.db"
+    initialize_database(database_path)
+
+    with pytest.raises(sqlite3.IntegrityError), database_session(database_path) as connection:
+        connection.execute(
+            """
+            INSERT INTO import_tasks
+                (task_id, channel, file_path, status, created_time)
+            VALUES (?, 'GOOGLE', 'sample.xlsx', ?, '2026-08-16T23:00:00+08:00')
+            """,
+            (f"TASK-{status or 'EMPTY'}", status),
+        )
+
+
+def test_schema_declares_required_indexes(tmp_path: Path) -> None:
+    database_path = tmp_path / "indexes.db"
+    initialize_database(database_path)
+
+    expected = {
+        "ux_active_version_per_channel",
+        "ix_channel_prices_lookup",
+        "ix_channel_prices_version",
+        "ix_import_tasks_status_created",
+    }
+    with database_session(database_path) as connection:
+        actual = {
+            row["name"]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%'"
+            )
+        }
+    assert expected.issubset(actual)
+
+
+def _seed_price_dependencies(database_path: Path) -> None:
+    with database_session(database_path) as connection:
+        repository = ReferenceDataRepository(connection)
+        repository.add_country(
+            country_code="JP", name_cn="日本", name_en="Japan", default_currency="JPY"
+        )
+        repository.add_price_tier(Decimal("9.99"))
+        _insert_version(connection, "GOOGLE_V20260816_001", "GOOGLE")
+
+
+def _insert_version(connection: sqlite3.Connection, version_id: str, channel: str) -> None:
+    connection.execute(
+        """
+        INSERT INTO price_versions
+            (version_id, channel, source_file, import_time, status)
+        VALUES (?, ?, 'sample.xlsx', '2026-08-16T23:00:00+08:00', 'ACTIVE')
+        """,
+        (version_id, channel),
+    )

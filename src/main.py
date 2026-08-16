@@ -6,6 +6,7 @@ import sys
 from collections.abc import Sequence
 
 from src.config.settings import PROJECT_NAME, VERSION, ensure_runtime_directories
+from src.database.schema import initialize_database
 
 
 def window_title() -> str:
@@ -45,6 +46,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     qt_args = [arg for arg in args if arg != "--smoke-test"]
 
     ensure_runtime_directories()
+    initialize_database()
     application = create_application(qt_args)
     window = create_main_window()
     window.show()

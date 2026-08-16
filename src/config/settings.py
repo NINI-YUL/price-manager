@@ -8,6 +8,7 @@ from pathlib import Path
 PROJECT_NAME = "多渠道本地化价格管理工具"
 VERSION = "0.1.0"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DATABASE_FILENAME = "price_manager.db"
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,6 +32,7 @@ class RuntimePaths:
 
 
 RUNTIME_PATHS = RuntimePaths.from_root(PROJECT_ROOT)
+DATABASE_PATH = RUNTIME_PATHS.data / DATABASE_FILENAME
 
 
 def ensure_runtime_directories(paths: RuntimePaths = RUNTIME_PATHS) -> None:
