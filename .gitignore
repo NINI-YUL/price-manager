@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+
+# Runtime data
+data/*
+!data/.gitkeep
+archives/*
+!archives/.gitkeep
+exports/*
+!exports/.gitkeep
+*.db
+*.sqlite*
+*.log
+
+# Local documentation tooling and packages
+.obsidian/
+*.zip
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
