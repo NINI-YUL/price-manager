@@ -47,10 +47,17 @@ def test_approved_seed_files_have_expected_content_and_checksums() -> None:
     assert manifest["googleSource"]["rowCount"] == 173
     assert manifest["iosSource"]["priceRowCount"] == 2450
     assert manifest["iosSource"]["tierCount"] == 14
+    assert manifest["webSource"]["countryCount"] == 30
+    assert manifest["webSource"]["currencyCount"] == 20
+    assert manifest["webSource"]["tierCount"] == 14
+    assert manifest["webSource"]["priceCellCount"] == 420
     assert manifest["cldrSource"]["version"] == "48.2.0"
     assert manifest["outputs"]["countries"]["sha256"] == _sha256(COUNTRIES_PATH)
     assert manifest["outputs"]["iosCountryAliases"]["sha256"] == _sha256(
         SEEDS_DIR / "ios_country_aliases.csv"
+    )
+    assert manifest["outputs"]["webCountryAliases"]["sha256"] == _sha256(
+        SEEDS_DIR / "web_country_aliases.csv"
     )
     assert manifest["outputs"]["tiers"]["sha256"] == _sha256(PRICE_TIERS_PATH)
 

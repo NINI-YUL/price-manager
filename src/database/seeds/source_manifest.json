@@ -17,6 +17,16 @@
     "currencyCount": 43,
     "priceRowCount": 2450
   },
+  "webSource": {
+    "fileName": "标准价格配置表 (1).xlsx",
+    "sha256": "28c70d60126e4df2facd2759af271a7006c1a9d47e60f071c9fc3c7155fd9a38",
+    "sheet": "输出表",
+    "range": "A1:BI16",
+    "countryCount": 30,
+    "currencyCount": 20,
+    "tierCount": 14,
+    "priceCellCount": 420
+  },
   "cldrSource": {
     "version": "48.2.0",
     "enUrl": "https://raw.githubusercontent.com/unicode-org/cldr-json/48.2.0/cldr-json/cldr-localenames-full/main/en/territories.json",
@@ -32,6 +42,10 @@
     "iosCountryAliases": {
       "rowCount": 6,
       "sha256": "87fd9f3eac962b9113e77b5fd8e052e5e24a390830136c76252ecb5073c0f123"
+    },
+    "webCountryAliases": {
+      "rowCount": 1,
+      "sha256": "61c9a013ac5d605b5b6a91f23a6bdd61955237b53625be552299938a2d28c778"
     },
     "tiers": {
       "rowCount": 14,
