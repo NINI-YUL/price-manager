@@ -33,6 +33,11 @@ class ReferenceDataRepository:
             "SELECT * FROM countries WHERE country_code = ?", (country_code,)
         ).fetchone()
 
+    def list_countries(self) -> tuple[sqlite3.Row, ...]:
+        return tuple(
+            self._connection.execute("SELECT * FROM countries ORDER BY country_code")
+        )
+
     def add_price_tier(self, usd_price: Decimal) -> None:
         self._connection.execute(
             "INSERT INTO price_tiers (usd_price) VALUES (?)", (str(usd_price),)
@@ -42,3 +47,18 @@ class ReferenceDataRepository:
         return self._connection.execute(
             "SELECT * FROM price_tiers WHERE usd_price = ?", (str(usd_price),)
         ).fetchone()
+
+    def list_price_tiers(self) -> tuple[sqlite3.Row, ...]:
+        return tuple(self._connection.execute("SELECT * FROM price_tiers ORDER BY usd_price"))
+
+    def list_channel_products(self, channel: str) -> tuple[sqlite3.Row, ...]:
+        return tuple(
+            self._connection.execute(
+                """
+                SELECT * FROM channel_products
+                WHERE channel = ?
+                ORDER BY product_id
+                """,
+                (channel,),
+            )
+        )

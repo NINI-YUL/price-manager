@@ -1,5 +1,6 @@
-"""Minimal repositories available after P1-002."""
+"""Repositories available to the current Phase1 services."""
 
+from src.database.repositories.import_tasks import ImportTaskRepository
 from src.database.repositories.reference_data import ReferenceDataRepository
 
-__all__ = ["ReferenceDataRepository"]
+__all__ = ["ImportTaskRepository", "ReferenceDataRepository"]
