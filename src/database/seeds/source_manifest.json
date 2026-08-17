@@ -1,5 +1,5 @@
 {
-  "generatedOn": "2026-08-16",
+  "generatedOn": "2026-08-17",
   "googleSource": {
     "fileName": "google价格_get_result.xlsx",
     "sha256": "2e848e3e9dc442bf70c66dd8d0c85e521490aebc5655185d68bb4b422305689a",
@@ -7,6 +7,15 @@
     "countryCurrencyRange": "B1:C174",
     "tierHeaderRange": "D1:Q1",
     "rowCount": 173
+  },
+  "iosSource": {
+    "directoryName": "ios价格0817",
+    "bundleSha256": "b71a301ba36bd42a3ba7a52688321d9d96a7843a2f70594c8302008dc070e52b",
+    "fileCount": 28,
+    "tierCount": 14,
+    "countryCount": 175,
+    "currencyCount": 43,
+    "priceRowCount": 2450
   },
   "cldrSource": {
     "version": "48.2.0",
@@ -17,8 +26,12 @@
   },
   "outputs": {
     "countries": {
-      "rowCount": 173,
-      "sha256": "deb631ff05335134a09cb3c8faffef7ca3714387d8668ab9414e4c8bc271a37a"
+      "rowCount": 191,
+      "sha256": "734a079400c3e4560d33e6f4fce9d543e4ec62efffceeb8224793ac90ffed104"
+    },
+    "iosCountryAliases": {
+      "rowCount": 6,
+      "sha256": "87fd9f3eac962b9113e77b5fd8e052e5e24a390830136c76252ecb5073c0f123"
     },
     "tiers": {
       "rowCount": 14,

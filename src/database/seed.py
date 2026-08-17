@@ -18,7 +18,7 @@ from src.database.schema import initialize_database
 SEEDS_DIR = Path(__file__).with_name("seeds")
 COUNTRIES_PATH = SEEDS_DIR / "countries.csv"
 PRICE_TIERS_PATH = SEEDS_DIR / "price_tiers.csv"
-EXPECTED_COUNTRY_COUNT = 173
+EXPECTED_COUNTRY_COUNT = 191
 EXPECTED_PRICE_TIERS = tuple(
     Decimal(value)
     for value in (
@@ -78,7 +78,7 @@ class SeedReport:
 
 
 def load_countries(path: Path = COUNTRIES_PATH) -> tuple[CountrySeed, ...]:
-    """Load and fully validate the approved 173-country seed file."""
+    """Load and fully validate the approved 191-country union seed file."""
 
     try:
         source = path.open("r", encoding="utf-8-sig", newline="")

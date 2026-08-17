@@ -21,7 +21,7 @@ def test_schema_initialization_is_idempotent_and_reference_tables_are_empty(
 
     with database_session(database_path) as connection:
         assert list_business_tables(connection) == BUSINESS_TABLES
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 1
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 2
         assert connection.execute("SELECT COUNT(*) FROM countries").fetchone()[0] == 0
         assert connection.execute("SELECT COUNT(*) FROM price_tiers").fetchone()[0] == 0
 
@@ -172,6 +172,87 @@ def test_schema_declares_required_indexes(tmp_path: Path) -> None:
             )
         }
     assert expected.issubset(actual)
+
+
+def test_adjustment_mode_constraint_and_v1_migration(tmp_path: Path) -> None:
+    database_path = tmp_path / "migration.db"
+    connection = open_database(database_path)
+    try:
+        connection.executescript(
+            """
+            CREATE TABLE channel_prices (
+                id INTEGER PRIMARY KEY,
+                channel TEXT NOT NULL,
+                country_code TEXT NOT NULL,
+                usd_tier NUMERIC NOT NULL,
+                currency TEXT NOT NULL,
+                local_price NUMERIC NOT NULL,
+                version_id TEXT NOT NULL,
+                created_time TEXT NOT NULL
+            );
+            INSERT INTO channel_prices
+                (channel, country_code, usd_tier, currency, local_price,
+                 version_id, created_time)
+            VALUES ('IOS', 'US', 0.99, 'USD', 0.99, 'OLD', '2026-08-17T00:00:00+08:00');
+            PRAGMA user_version = 1;
+            """
+        )
+    finally:
+        connection.close()
+
+    initialize_database(database_path)
+    initialize_database(database_path)
+
+    with database_session(database_path) as migrated:
+        columns = {
+            row["name"] for row in migrated.execute("PRAGMA table_info(channel_prices)")
+        }
+        assert "adjustment_mode" in columns
+        assert migrated.execute("PRAGMA user_version").fetchone()[0] == 2
+        saved = migrated.execute("SELECT * FROM channel_prices").fetchone()
+        assert saved["local_price"] == 0.99
+        assert saved["adjustment_mode"] is None
+
+
+def test_adjustment_mode_rejects_unknown_value(tmp_path: Path) -> None:
+    database_path = tmp_path / "adjustment-constraint.db"
+    initialize_database(database_path)
+    _seed_price_dependencies(database_path)
+
+    with pytest.raises(sqlite3.IntegrityError), database_session(database_path) as connection:
+        connection.execute(
+            """
+            INSERT INTO channel_prices
+                (channel, country_code, usd_tier, currency, local_price,
+                 adjustment_mode, version_id, created_time)
+            VALUES ('GOOGLE', 'JP', 9.99, 'JPY', 1500, 'UNKNOWN',
+                    'GOOGLE_V20260816_001', '2026-08-17T00:00:00+08:00')
+            """
+        )
+
+
+def test_failed_schema_upgrade_rolls_back(tmp_path: Path) -> None:
+    database_path = tmp_path / "broken-v1.db"
+    connection = open_database(database_path)
+    try:
+        connection.executescript(
+            """
+            CREATE TABLE channel_prices (id INTEGER PRIMARY KEY);
+            PRAGMA user_version = 1;
+            """
+        )
+    finally:
+        connection.close()
+
+    with pytest.raises(sqlite3.OperationalError):
+        initialize_database(database_path)
+
+    with database_session(database_path) as connection:
+        columns = {
+            row["name"] for row in connection.execute("PRAGMA table_info(channel_prices)")
+        }
+        assert columns == {"id"}
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 1
 
 
 def _seed_price_dependencies(database_path: Path) -> None:

@@ -8,7 +8,7 @@ from pathlib import Path
 from src.config.settings import DATABASE_PATH
 from src.database.connection import DatabasePath, open_database
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 BUSINESS_TABLES = frozenset(
     {
         "countries",
@@ -71,6 +71,8 @@ CREATE TABLE IF NOT EXISTS channel_prices (
         CHECK (length(currency) = 3 AND currency = upper(currency)
                AND currency GLOB '[A-Z][A-Z][A-Z]'),
     local_price NUMERIC NOT NULL CHECK (local_price > 0),
+    adjustment_mode TEXT
+        CHECK (adjustment_mode IS NULL OR adjustment_mode IN ('MANUAL', 'AUTOMATIC')),
     version_id TEXT NOT NULL,
     created_time TEXT NOT NULL CHECK (length(trim(created_time)) > 0),
     UNIQUE (version_id, channel, country_code, usd_tier, currency),
@@ -110,11 +112,37 @@ ON import_tasks(status, created_time);
 
 
 def initialize_schema(connection: sqlite3.Connection) -> None:
-    """Create the complete P1-002 schema atomically and idempotently."""
+    """Create or migrate the Phase1 schema atomically and idempotently."""
+
+    current_version = int(connection.execute("PRAGMA user_version").fetchone()[0])
+    if current_version > SCHEMA_VERSION:
+        raise RuntimeError(
+            f"database schema version {current_version} is newer than supported "
+            f"version {SCHEMA_VERSION}"
+        )
+    has_channel_prices = connection.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'channel_prices'"
+    ).fetchone()
+    existing_price_columns = (
+        {
+            str(row["name"])
+            for row in connection.execute("PRAGMA table_info(channel_prices)")
+        }
+        if has_channel_prices
+        else set()
+    )
+    migration_sql = ""
+    if has_channel_prices and "adjustment_mode" not in existing_price_columns:
+        migration_sql = """
+ALTER TABLE channel_prices
+ADD COLUMN adjustment_mode TEXT
+    CHECK (adjustment_mode IS NULL OR adjustment_mode IN ('MANUAL', 'AUTOMATIC'));
+"""
 
     try:
         connection.executescript(
-            f"BEGIN IMMEDIATE;\n{SCHEMA_SQL}\nPRAGMA user_version = {SCHEMA_VERSION};\nCOMMIT;"
+            f"BEGIN IMMEDIATE;\n{SCHEMA_SQL}\n{migration_sql}\n"
+            f"PRAGMA user_version = {SCHEMA_VERSION};\nCOMMIT;"
         )
     except Exception:
         if connection.in_transaction:

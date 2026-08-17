@@ -29,20 +29,29 @@ def test_approved_seed_files_have_expected_content_and_checksums() -> None:
     tiers = load_price_tiers()
     by_code = {country.country_code: country for country in countries}
 
-    assert len(countries) == EXPECTED_COUNTRY_COUNT == 173
-    assert len(by_code) == 173
+    assert len(countries) == EXPECTED_COUNTRY_COUNT == 191
+    assert len(by_code) == 191
     assert tuple(country.country_code for country in countries) == tuple(sorted(by_code))
     assert by_code["JP"].name_cn == "日本"
     assert by_code["JP"].name_en == "Japan"
     assert by_code["JP"].default_currency == "JPY"
     assert by_code["US"].default_currency == "USD"
+    assert by_code["CN"].name_cn == "中国"
+    assert by_code["CN"].default_currency == "CNY"
+    assert by_code["XK"].name_en == "Kosovo"
+    assert by_code["XK"].default_currency == "EUR"
     assert tiers == EXPECTED_PRICE_TIERS
     assert Decimal("9.99") in tiers
 
     manifest = json.loads((SEEDS_DIR / "source_manifest.json").read_text(encoding="utf-8"))
     assert manifest["googleSource"]["rowCount"] == 173
+    assert manifest["iosSource"]["priceRowCount"] == 2450
+    assert manifest["iosSource"]["tierCount"] == 14
     assert manifest["cldrSource"]["version"] == "48.2.0"
     assert manifest["outputs"]["countries"]["sha256"] == _sha256(COUNTRIES_PATH)
+    assert manifest["outputs"]["iosCountryAliases"]["sha256"] == _sha256(
+        SEEDS_DIR / "ios_country_aliases.csv"
+    )
     assert manifest["outputs"]["tiers"]["sha256"] == _sha256(PRICE_TIERS_PATH)
 
 
@@ -53,7 +62,7 @@ def test_seed_database_is_atomic_and_idempotent(tmp_path: Path) -> None:
     second = seed_database(database_path)
 
     assert first.as_dict() == {
-        "countries_added": 173,
+        "countries_added": 191,
         "countries_unchanged": 0,
         "tiers_added": 14,
         "tiers_unchanged": 0,
@@ -62,7 +71,7 @@ def test_seed_database_is_atomic_and_idempotent(tmp_path: Path) -> None:
     }
     assert second.as_dict() == {
         "countries_added": 0,
-        "countries_unchanged": 173,
+        "countries_unchanged": 191,
         "tiers_added": 0,
         "tiers_unchanged": 14,
         "conflicts": 0,
@@ -70,7 +79,7 @@ def test_seed_database_is_atomic_and_idempotent(tmp_path: Path) -> None:
     }
 
     with database_session(database_path) as connection:
-        assert connection.execute("SELECT COUNT(*) FROM countries").fetchone()[0] == 173
+        assert connection.execute("SELECT COUNT(*) FROM countries").fetchone()[0] == 191
         assert connection.execute("SELECT COUNT(*) FROM price_tiers").fetchone()[0] == 14
         assert connection.execute(
             "SELECT default_currency FROM countries WHERE country_code = 'JP'"

@@ -1,6 +1,8 @@
 country_code,name_cn,name_en,default_currency
 AE,阿拉伯联合酋长国,United Arab Emirates,AED
+AF,阿富汗,Afghanistan,USD
 AG,安提瓜和巴布达,Antigua & Barbuda,USD
+AI,安圭拉,Anguilla,USD
 AL,阿尔巴尼亚,Albania,USD
 AM,亚美尼亚,Armenia,USD
 AO,安哥拉,Angola,USD
@@ -10,6 +12,7 @@ AU,澳大利亚,Australia,AUD
 AW,阿鲁巴,Aruba,USD
 AZ,阿塞拜疆,Azerbaijan,USD
 BA,波斯尼亚和黑塞哥维那,Bosnia & Herzegovina,USD
+BB,巴巴多斯,Barbados,USD
 BD,孟加拉国,Bangladesh,BDT
 BE,比利时,Belgium,EUR
 BF,布基纳法索,Burkina Faso,EUR
@@ -17,9 +20,11 @@ BG,保加利亚,Bulgaria,EUR
 BH,巴林,Bahrain,USD
 BJ,贝宁,Benin,EUR
 BM,百慕大,Bermuda,USD
+BN,文莱,Brunei,USD
 BO,玻利维亚,Bolivia,BOB
 BR,巴西,Brazil,BRL
 BS,巴哈马,Bahamas,USD
+BT,不丹,Bhutan,USD
 BW,博茨瓦纳,Botswana,USD
 BY,白俄罗斯,Belarus,USD
 BZ,伯利兹,Belize,USD
@@ -31,6 +36,7 @@ CH,瑞士,Switzerland,CHF
 CI,科特迪瓦,Côte d’Ivoire,XOF
 CL,智利,Chile,CLP
 CM,喀麦隆,Cameroon,XAF
+CN,中国,China,CNY
 CO,哥伦比亚,Colombia,COP
 CR,哥斯达黎加,Costa Rica,CRC
 CV,佛得角,Cape Verde,USD
@@ -62,6 +68,7 @@ GN,几内亚,Guinea,USD
 GR,希腊,Greece,EUR
 GT,危地马拉,Guatemala,USD
 GW,几内亚比绍,Guinea-Bissau,EUR
+GY,圭亚那,Guyana,USD
 HK,中国香港特别行政区,Hong Kong SAR China,HKD
 HN,洪都拉斯,Honduras,USD
 HR,克罗地亚,Croatia,EUR
@@ -99,14 +106,19 @@ LY,利比亚,Libya,USD
 MA,摩洛哥,Morocco,MAD
 MC,摩纳哥,Monaco,EUR
 MD,摩尔多瓦,Moldova,USD
+ME,黑山,Montenegro,EUR
+MG,马达加斯加,Madagascar,USD
 MK,北马其顿,North Macedonia,USD
 ML,马里,Mali,EUR
 MM,缅甸,Myanmar (Burma),MMK
 MN,蒙古,Mongolia,MNT
 MO,中国澳门特别行政区,Macao SAR China,MOP
+MR,毛里塔尼亚,Mauritania,USD
+MS,蒙特塞拉特,Montserrat,USD
 MT,马耳他,Malta,EUR
 MU,毛里求斯,Mauritius,USD
 MV,马尔代夫,Maldives,USD
+MW,马拉维,Malawi,USD
 MX,墨西哥,Mexico,MXN
 MY,马来西亚,Malaysia,MYR
 MZ,莫桑比克,Mozambique,USD
@@ -117,6 +129,7 @@ NI,尼加拉瓜,Nicaragua,USD
 NL,荷兰,Netherlands,EUR
 NO,挪威,Norway,NOK
 NP,尼泊尔,Nepal,USD
+NR,瑙鲁,Nauru,USD
 NZ,新西兰,New Zealand,NZD
 OM,阿曼,Oman,USD
 PA,巴拿马,Panama,USD
@@ -126,6 +139,7 @@ PH,菲律宾,Philippines,PHP
 PK,巴基斯坦,Pakistan,PKR
 PL,波兰,Poland,PLN
 PT,葡萄牙,Portugal,EUR
+PW,帕劳,Palau,USD
 PY,巴拉圭,Paraguay,PYG
 QA,卡塔尔,Qatar,QAR
 RO,罗马尼亚,Romania,RON
@@ -144,7 +158,9 @@ SM,圣马力诺,San Marino,EUR
 SN,塞内加尔,Senegal,XOF
 SO,索马里,Somalia,USD
 SR,苏里南,Suriname,USD
+ST,圣多美和普林西比,São Tomé & Príncipe,USD
 SV,萨尔瓦多,El Salvador,USD
+SZ,斯威士兰,Eswatini,USD
 TC,特克斯和凯科斯群岛,Turks & Caicos Islands,USD
 TD,乍得,Chad,USD
 TG,多哥,Togo,EUR
@@ -163,11 +179,13 @@ US,美国,United States,USD
 UY,乌拉圭,Uruguay,USD
 UZ,乌兹别克斯坦,Uzbekistan,USD
 VA,梵蒂冈,Vatican City,EUR
+VC,圣文森特和格林纳丁斯,St. Vincent & Grenadines,USD
 VE,委内瑞拉,Venezuela,USD
 VG,英属维尔京群岛,British Virgin Islands,USD
 VN,越南,Vietnam,VND
 VU,瓦努阿图,Vanuatu,USD
 WS,萨摩亚,Samoa,USD
+XK,科索沃,Kosovo,EUR
 YE,也门,Yemen,USD
 ZA,南非,South Africa,ZAR
 ZM,赞比亚,Zambia,USD

@@ -25,6 +25,11 @@ class ImportTaskStatus(StrEnum):
     FAILED = "FAILED"
 
 
+class AdjustmentMode(StrEnum):
+    MANUAL = "MANUAL"
+    AUTOMATIC = "AUTOMATIC"
+
+
 @dataclass(frozen=True, slots=True)
 class ImportIssue:
     code: str
@@ -43,10 +48,11 @@ class StandardPrice:
     usd_tier: Decimal
     currency: str
     local_price: Decimal
-    product_id: str
+    product_id: str | None
     source_sheet: str
     source_row: int
     source_column: str
+    adjustment_mode: AdjustmentMode | None = None
 
     @property
     def natural_key(self) -> tuple[Channel, str, Decimal, str]:
@@ -65,6 +71,8 @@ class ImportStatistics:
     duplicate_count: int = 0
     error_count: int = 0
     warning_count: int = 0
+    manual_adjustment_count: int = 0
+    automatic_adjustment_count: int = 0
 
 
 @dataclass(frozen=True, slots=True)

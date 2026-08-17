@@ -1,6 +1,7 @@
 """Domain models used across adapters, services, persistence, and UI."""
 
 from src.models.import_preview import (
+    AdjustmentMode,
     Channel,
     ImportIssue,
     ImportPreview,
@@ -11,6 +12,7 @@ from src.models.import_preview import (
 )
 
 __all__ = [
+    "AdjustmentMode",
     "Channel",
     "ImportIssue",
     "ImportPreview",
