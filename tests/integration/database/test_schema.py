@@ -21,7 +21,7 @@ def test_schema_initialization_is_idempotent_and_reference_tables_are_empty(
 
     with database_session(database_path) as connection:
         assert list_business_tables(connection) == BUSINESS_TABLES
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 2
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 3
         assert connection.execute("SELECT COUNT(*) FROM countries").fetchone()[0] == 0
         assert connection.execute("SELECT COUNT(*) FROM price_tiers").fetchone()[0] == 0
 
@@ -163,6 +163,8 @@ def test_schema_declares_required_indexes(tmp_path: Path) -> None:
         "ix_channel_prices_lookup",
         "ix_channel_prices_version",
         "ix_import_tasks_status_created",
+        "ix_price_versions_channel_sha256",
+        "ux_import_tasks_version",
     }
     with database_session(database_path) as connection:
         actual = {
@@ -204,11 +206,9 @@ def test_adjustment_mode_constraint_and_v1_migration(tmp_path: Path) -> None:
     initialize_database(database_path)
 
     with database_session(database_path) as migrated:
-        columns = {
-            row["name"] for row in migrated.execute("PRAGMA table_info(channel_prices)")
-        }
+        columns = {row["name"] for row in migrated.execute("PRAGMA table_info(channel_prices)")}
         assert "adjustment_mode" in columns
-        assert migrated.execute("PRAGMA user_version").fetchone()[0] == 2
+        assert migrated.execute("PRAGMA user_version").fetchone()[0] == 3
         saved = migrated.execute("SELECT * FROM channel_prices").fetchone()
         assert saved["local_price"] == 0.99
         assert saved["adjustment_mode"] is None
@@ -231,6 +231,60 @@ def test_adjustment_mode_rejects_unknown_value(tmp_path: Path) -> None:
         )
 
 
+def test_v2_import_task_migration_adds_version_link_atomically(tmp_path: Path) -> None:
+    database_path = tmp_path / "v2-task-migration.db"
+    connection = open_database(database_path)
+    try:
+        connection.executescript(
+            """
+            CREATE TABLE price_versions (
+                id INTEGER PRIMARY KEY,
+                version_id TEXT NOT NULL UNIQUE,
+                channel TEXT NOT NULL,
+                source_file TEXT NOT NULL,
+                source_sha256 TEXT,
+                import_time TEXT NOT NULL,
+                status TEXT NOT NULL,
+                record_count INTEGER NOT NULL DEFAULT 0,
+                UNIQUE (version_id, channel)
+            );
+            CREATE TABLE import_tasks (
+                id INTEGER PRIMARY KEY,
+                task_id TEXT NOT NULL UNIQUE,
+                channel TEXT NOT NULL,
+                file_path TEXT NOT NULL,
+                status TEXT NOT NULL,
+                error_count INTEGER NOT NULL DEFAULT 0,
+                warning_count INTEGER NOT NULL DEFAULT 0,
+                created_time TEXT NOT NULL,
+                completed_time TEXT,
+                error_message TEXT
+            );
+            INSERT INTO import_tasks
+                (task_id, channel, file_path, status, created_time)
+            VALUES ('OLD-TASK', 'GOOGLE', 'old.xlsx', 'CHECKING',
+                    '2026-08-17T00:00:00+08:00');
+            PRAGMA user_version = 2;
+            """
+        )
+    finally:
+        connection.close()
+
+    initialize_database(database_path)
+    initialize_database(database_path)
+
+    with database_session(database_path) as migrated:
+        columns = {row["name"] for row in migrated.execute("PRAGMA table_info(import_tasks)")}
+        assert "version_id" in columns
+        assert migrated.execute("PRAGMA user_version").fetchone()[0] == 3
+        assert (
+            migrated.execute(
+                "SELECT version_id FROM import_tasks WHERE task_id = 'OLD-TASK'"
+            ).fetchone()[0]
+            is None
+        )
+
+
 def test_failed_schema_upgrade_rolls_back(tmp_path: Path) -> None:
     database_path = tmp_path / "broken-v1.db"
     connection = open_database(database_path)
@@ -248,9 +302,7 @@ def test_failed_schema_upgrade_rolls_back(tmp_path: Path) -> None:
         initialize_database(database_path)
 
     with database_session(database_path) as connection:
-        columns = {
-            row["name"] for row in connection.execute("PRAGMA table_info(channel_prices)")
-        }
+        columns = {row["name"] for row in connection.execute("PRAGMA table_info(channel_prices)")}
         assert columns == {"id"}
         assert connection.execute("PRAGMA user_version").fetchone()[0] == 1
 

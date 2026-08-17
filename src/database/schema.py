@@ -8,7 +8,7 @@ from pathlib import Path
 from src.config.settings import DATABASE_PATH
 from src.database.connection import DatabasePath, open_database
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 BUSINESS_TABLES = frozenset(
     {
         "countries",
@@ -94,7 +94,10 @@ CREATE TABLE IF NOT EXISTS import_tasks (
     warning_count INTEGER NOT NULL DEFAULT 0 CHECK (warning_count >= 0),
     created_time TEXT NOT NULL CHECK (length(trim(created_time)) > 0),
     completed_time TEXT,
-    error_message TEXT
+    error_message TEXT,
+    version_id TEXT,
+    FOREIGN KEY (version_id) REFERENCES price_versions(version_id)
+        ON UPDATE RESTRICT ON DELETE RESTRICT
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS ux_active_version_per_channel
@@ -108,6 +111,14 @@ ON channel_prices(version_id);
 
 CREATE INDEX IF NOT EXISTS ix_import_tasks_status_created
 ON import_tasks(status, created_time);
+"""
+
+POST_MIGRATION_SQL = """
+CREATE UNIQUE INDEX IF NOT EXISTS ux_import_tasks_version
+ON import_tasks(version_id) WHERE version_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS ix_price_versions_channel_sha256
+ON price_versions(channel, source_sha256);
 """
 
 
@@ -124,24 +135,40 @@ def initialize_schema(connection: sqlite3.Connection) -> None:
         "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'channel_prices'"
     ).fetchone()
     existing_price_columns = (
-        {
-            str(row["name"])
-            for row in connection.execute("PRAGMA table_info(channel_prices)")
-        }
+        {str(row["name"]) for row in connection.execute("PRAGMA table_info(channel_prices)")}
         if has_channel_prices
         else set()
     )
-    migration_sql = ""
+    has_import_tasks = connection.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'import_tasks'"
+    ).fetchone()
+    existing_task_columns = (
+        {str(row["name"]) for row in connection.execute("PRAGMA table_info(import_tasks)")}
+        if has_import_tasks
+        else set()
+    )
+    migrations: list[str] = []
     if has_channel_prices and "adjustment_mode" not in existing_price_columns:
-        migration_sql = """
+        migrations.append(
+            """
 ALTER TABLE channel_prices
 ADD COLUMN adjustment_mode TEXT
     CHECK (adjustment_mode IS NULL OR adjustment_mode IN ('MANUAL', 'AUTOMATIC'));
 """
+        )
+    if has_import_tasks and "version_id" not in existing_task_columns:
+        migrations.append(
+            """
+ALTER TABLE import_tasks
+ADD COLUMN version_id TEXT REFERENCES price_versions(version_id)
+    ON UPDATE RESTRICT ON DELETE RESTRICT;
+"""
+        )
+    migration_sql = "\n".join(migrations)
 
     try:
         connection.executescript(
-            f"BEGIN IMMEDIATE;\n{SCHEMA_SQL}\n{migration_sql}\n"
+            f"BEGIN IMMEDIATE;\n{SCHEMA_SQL}\n{migration_sql}\n{POST_MIGRATION_SQL}\n"
             f"PRAGMA user_version = {SCHEMA_VERSION};\nCOMMIT;"
         )
     except Exception:

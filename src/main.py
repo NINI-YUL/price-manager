@@ -5,7 +5,13 @@ from __future__ import annotations
 import sys
 from collections.abc import Sequence
 
-from src.config.settings import PROJECT_NAME, VERSION, ensure_runtime_directories
+from src.config.settings import (
+    DATABASE_PATH,
+    PROJECT_NAME,
+    RUNTIME_PATHS,
+    VERSION,
+    ensure_runtime_directories,
+)
 from src.database.seed import seed_database
 
 
@@ -26,15 +32,21 @@ def create_application(argv: Sequence[str] | None = None):
     return QApplication(list(argv) if argv is not None else sys.argv)
 
 
-def create_main_window():
-    """Build the minimal P1-001 window; business pages are added in later tasks."""
+def create_main_window(
+    database_path=DATABASE_PATH,
+    *,
+    archives_path=RUNTIME_PATHS.archives,
+):
+    """Build the P1-007 import and inspection window."""
 
-    from PySide6.QtWidgets import QLabel, QMainWindow
+    from PySide6.QtWidgets import QMainWindow
+
+    from src.ui import ImportPage
 
     window = QMainWindow()
     window.setWindowTitle(window_title())
     window.setMinimumSize(960, 640)
-    window.setCentralWidget(QLabel("多渠道本地化价格管理工具\nPhase1 项目骨架已启动"))
+    window.setCentralWidget(ImportPage(database_path, archives_root=archives_path, parent=window))
     return window
 
 

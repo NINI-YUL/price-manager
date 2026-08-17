@@ -67,3 +67,39 @@ class ImportTaskRepository:
         return self._connection.execute(
             "SELECT * FROM import_tasks WHERE task_id = ?", (task_id,)
         ).fetchone()
+
+    def mark_success(
+        self,
+        *,
+        task_id: str,
+        version_id: str,
+        completed_time: str,
+    ) -> None:
+        cursor = self._connection.execute(
+            """
+            UPDATE import_tasks
+            SET status = ?, version_id = ?, completed_time = ?, error_message = NULL
+            WHERE task_id = ? AND status = ?
+            """,
+            (
+                ImportTaskStatus.SUCCESS.value,
+                version_id,
+                completed_time,
+                task_id,
+                ImportTaskStatus.CHECKING.value,
+            ),
+        )
+        if cursor.rowcount != 1:
+            raise LookupError(f"import task {task_id!r} is not ready for confirmation")
+
+    def set_retryable_error(self, *, task_id: str, error_message: str) -> None:
+        cursor = self._connection.execute(
+            """
+            UPDATE import_tasks
+            SET error_message = ?, completed_time = NULL
+            WHERE task_id = ? AND status = ?
+            """,
+            (error_message, task_id, ImportTaskStatus.CHECKING.value),
+        )
+        if cursor.rowcount != 1:
+            raise LookupError(f"import task {task_id!r} is not ready for confirmation")
