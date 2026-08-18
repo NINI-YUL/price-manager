@@ -14,6 +14,7 @@ archives/*
 !archives/.gitkeep
 exports/*
 !exports/.gitkeep
+acceptance_runtime/
 *.db
 *.sqlite*
 *.log
