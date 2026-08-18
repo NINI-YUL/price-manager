@@ -37,16 +37,18 @@ def create_main_window(
     *,
     archives_path=RUNTIME_PATHS.archives,
 ):
-    """Build the P1-007 import and inspection window."""
+    """Build the Phase1 main window with import and price-library navigation."""
 
     from PySide6.QtWidgets import QMainWindow
 
-    from src.ui import ImportPage
+    from src.ui import ApplicationShell
 
     window = QMainWindow()
     window.setWindowTitle(window_title())
-    window.setMinimumSize(960, 640)
-    window.setCentralWidget(ImportPage(database_path, archives_root=archives_path, parent=window))
+    window.setMinimumSize(1180, 720)
+    window.setCentralWidget(
+        ApplicationShell(database_path, archives_root=archives_path, parent=window)
+    )
     return window
 
 

@@ -22,7 +22,7 @@ from src.models import (
     IssueSeverity,
     StandardPrice,
 )
-from src.ui import ImportPage
+from src.ui import ApplicationShell, ImportPage
 from src.utils.source_hash import file_sha256
 
 
@@ -97,7 +97,7 @@ def test_page_parses_web_workbook_in_background(tmp_path: Path) -> None:
     page.close()
 
 
-def test_main_window_uses_import_page(tmp_path: Path) -> None:
+def test_main_window_uses_navigation_shell_with_import_default(tmp_path: Path) -> None:
     _application()
     database_path = tmp_path / "window.db"
     seed_database(database_path)
@@ -106,8 +106,12 @@ def test_main_window_uses_import_page(tmp_path: Path) -> None:
         archives_path=tmp_path / "archives",
     )
 
-    assert isinstance(window.centralWidget(), ImportPage)
-    assert window.minimumWidth() == 960
+    shell = window.centralWidget()
+    assert isinstance(shell, ApplicationShell)
+    assert isinstance(shell.import_page, ImportPage)
+    assert shell.stack.currentWidget() is shell.import_page
+    assert shell.import_navigation.isChecked()
+    assert window.minimumWidth() == 1180
     window.close()
 
 
