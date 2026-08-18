@@ -37,7 +37,7 @@ def create_main_window(
     *,
     archives_path=RUNTIME_PATHS.archives,
 ):
-    """Build the Phase1 main window with import and price-library navigation."""
+    """Build the Phase1 main window with import, price-library, and version navigation."""
 
     from PySide6.QtWidgets import QMainWindow
 

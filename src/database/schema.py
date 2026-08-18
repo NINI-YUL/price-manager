@@ -8,7 +8,7 @@ from pathlib import Path
 from src.config.settings import DATABASE_PATH
 from src.database.connection import DatabasePath, open_database
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 BUSINESS_TABLES = frozenset(
     {
         "countries",
@@ -17,6 +17,7 @@ BUSINESS_TABLES = frozenset(
         "channel_prices",
         "price_versions",
         "import_tasks",
+        "version_status_events",
     }
 )
 
@@ -100,6 +101,27 @@ CREATE TABLE IF NOT EXISTS import_tasks (
         ON UPDATE RESTRICT ON DELETE RESTRICT
 );
 
+CREATE TABLE IF NOT EXISTS version_status_events (
+    id INTEGER PRIMARY KEY,
+    event_id TEXT NOT NULL UNIQUE CHECK (length(trim(event_id)) > 0),
+    version_id TEXT NOT NULL,
+    channel TEXT NOT NULL CHECK (channel IN ('GOOGLE', 'IOS', 'WEB')),
+    from_status TEXT
+        CHECK (from_status IS NULL OR from_status IN ('ACTIVE', 'ARCHIVED')),
+    to_status TEXT NOT NULL CHECK (to_status IN ('ACTIVE', 'ARCHIVED')),
+    replaced_version_id TEXT,
+    reason TEXT NOT NULL
+        CHECK (reason IN ('IMPORT_CONFIRMATION', 'MANUAL_ACTIVATION',
+                          'MIGRATION_BASELINE')),
+    note TEXT CHECK (note IS NULL OR length(note) <= 200),
+    actor TEXT NOT NULL DEFAULT 'LOCAL_USER' CHECK (length(trim(actor)) > 0),
+    created_time TEXT NOT NULL CHECK (length(trim(created_time)) > 0),
+    FOREIGN KEY (version_id, channel) REFERENCES price_versions(version_id, channel)
+        ON UPDATE RESTRICT ON DELETE RESTRICT,
+    FOREIGN KEY (replaced_version_id) REFERENCES price_versions(version_id)
+        ON UPDATE RESTRICT ON DELETE RESTRICT
+);
+
 CREATE UNIQUE INDEX IF NOT EXISTS ux_active_version_per_channel
 ON price_versions(channel) WHERE status = 'ACTIVE';
 
@@ -111,6 +133,12 @@ ON channel_prices(version_id);
 
 CREATE INDEX IF NOT EXISTS ix_import_tasks_status_created
 ON import_tasks(status, created_time);
+
+CREATE INDEX IF NOT EXISTS ix_version_status_events_version_created
+ON version_status_events(version_id, created_time);
+
+CREATE INDEX IF NOT EXISTS ix_version_status_events_channel_created
+ON version_status_events(channel, created_time);
 """
 
 POST_MIGRATION_SQL = """
@@ -119,6 +147,23 @@ ON import_tasks(version_id) WHERE version_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS ix_price_versions_channel_sha256
 ON price_versions(channel, source_sha256);
+"""
+
+MIGRATION_BASELINE_SQL = """
+INSERT OR IGNORE INTO version_status_events
+    (event_id, version_id, channel, from_status, to_status,
+     replaced_version_id, reason, note, actor, created_time)
+SELECT 'MIGRATION_' || version_id,
+       version_id,
+       channel,
+       NULL,
+       status,
+       NULL,
+       'MIGRATION_BASELINE',
+       'Schema V4 migration baseline',
+       'LOCAL_USER',
+       strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+FROM price_versions;
 """
 
 
@@ -164,6 +209,8 @@ ADD COLUMN version_id TEXT REFERENCES price_versions(version_id)
     ON UPDATE RESTRICT ON DELETE RESTRICT;
 """
         )
+    if current_version < 4:
+        migrations.append(MIGRATION_BASELINE_SQL)
     migration_sql = "\n".join(migrations)
 
     try:
@@ -190,7 +237,7 @@ def initialize_database(database_path: DatabasePath = DATABASE_PATH) -> Path:
 
 
 def list_business_tables(connection: sqlite3.Connection) -> set[str]:
-    """Return only the six application tables, excluding SQLite internals."""
+    """Return only the seven application tables, excluding SQLite internals."""
 
     rows = connection.execute(
         "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"

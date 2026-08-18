@@ -21,7 +21,7 @@ def test_schema_initialization_is_idempotent_and_reference_tables_are_empty(
 
     with database_session(database_path) as connection:
         assert list_business_tables(connection) == BUSINESS_TABLES
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 3
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 4
         assert connection.execute("SELECT COUNT(*) FROM countries").fetchone()[0] == 0
         assert connection.execute("SELECT COUNT(*) FROM price_tiers").fetchone()[0] == 0
 
@@ -165,6 +165,8 @@ def test_schema_declares_required_indexes(tmp_path: Path) -> None:
         "ix_import_tasks_status_created",
         "ix_price_versions_channel_sha256",
         "ux_import_tasks_version",
+        "ix_version_status_events_version_created",
+        "ix_version_status_events_channel_created",
     }
     with database_session(database_path) as connection:
         actual = {
@@ -208,7 +210,7 @@ def test_adjustment_mode_constraint_and_v1_migration(tmp_path: Path) -> None:
     with database_session(database_path) as migrated:
         columns = {row["name"] for row in migrated.execute("PRAGMA table_info(channel_prices)")}
         assert "adjustment_mode" in columns
-        assert migrated.execute("PRAGMA user_version").fetchone()[0] == 3
+        assert migrated.execute("PRAGMA user_version").fetchone()[0] == 4
         saved = migrated.execute("SELECT * FROM channel_prices").fetchone()
         assert saved["local_price"] == 0.99
         assert saved["adjustment_mode"] is None
@@ -276,7 +278,7 @@ def test_v2_import_task_migration_adds_version_link_atomically(tmp_path: Path) -
     with database_session(database_path) as migrated:
         columns = {row["name"] for row in migrated.execute("PRAGMA table_info(import_tasks)")}
         assert "version_id" in columns
-        assert migrated.execute("PRAGMA user_version").fetchone()[0] == 3
+        assert migrated.execute("PRAGMA user_version").fetchone()[0] == 4
         assert (
             migrated.execute(
                 "SELECT version_id FROM import_tasks WHERE task_id = 'OLD-TASK'"

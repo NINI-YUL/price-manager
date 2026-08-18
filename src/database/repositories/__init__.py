@@ -7,6 +7,7 @@ from src.database.repositories.price_versions import (
     ProductMappingConflictError,
 )
 from src.database.repositories.reference_data import ReferenceDataRepository
+from src.database.repositories.version_management import VersionManagementRepository
 
 __all__ = [
     "ImportTaskRepository",
@@ -14,4 +15,5 @@ __all__ = [
     "PriceVersionRepository",
     "ProductMappingConflictError",
     "ReferenceDataRepository",
+    "VersionManagementRepository",
 ]

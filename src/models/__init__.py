@@ -26,9 +26,22 @@ from src.models.price_library import (
     format_local_price,
     format_usd_tier,
 )
+from src.models.version_management import (
+    ArchiveInspection,
+    ArchiveStatus,
+    VersionActivationAssessment,
+    VersionActivationResult,
+    VersionDetail,
+    VersionEventReason,
+    VersionManagementError,
+    VersionStatusEvent,
+    VersionSummary,
+)
 
 __all__ = [
     "AdjustmentMode",
+    "ArchiveInspection",
+    "ArchiveStatus",
     "Channel",
     "ConfirmationAssessment",
     "ConfirmationError",
@@ -45,7 +58,14 @@ __all__ = [
     "PriceVersion",
     "StandardPrice",
     "TierViewRow",
+    "VersionActivationAssessment",
+    "VersionActivationResult",
+    "VersionDetail",
+    "VersionEventReason",
+    "VersionManagementError",
     "VersionStatus",
+    "VersionStatusEvent",
+    "VersionSummary",
     "format_local_price",
     "format_usd_tier",
 ]

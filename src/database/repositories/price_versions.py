@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import sqlite3
+import uuid
 from collections.abc import Iterable
 from datetime import date
 from decimal import Decimal
@@ -18,6 +19,7 @@ class ProductMappingConflictError(ValueError):
 class PriceVersionRepository:
     def __init__(self, connection: sqlite3.Connection) -> None:
         self._connection = connection
+        self._last_archived_version_id: str | None = None
 
     def get(self, version_id: str) -> sqlite3.Row | None:
         return self._connection.execute(
@@ -80,6 +82,10 @@ class PriceVersionRepository:
         return f"{prefix}{sequence:03d}"
 
     def archive_active(self, channel: Channel) -> None:
+        current = self.get_active(channel)
+        self._last_archived_version_id = (
+            str(current["version_id"]) if current is not None else None
+        )
         self._connection.execute(
             """
             UPDATE price_versions
@@ -114,6 +120,23 @@ class PriceVersionRepository:
                 import_time,
                 record_count,
             ),
+        )
+        if self._last_archived_version_id is not None:
+            self._add_import_event(
+                version_id=self._last_archived_version_id,
+                channel=channel,
+                from_status="ACTIVE",
+                to_status="ARCHIVED",
+                replaced_version_id=version_id,
+                created_time=import_time,
+            )
+        self._add_import_event(
+            version_id=version_id,
+            channel=channel,
+            from_status=None,
+            to_status="ACTIVE",
+            replaced_version_id=self._last_archived_version_id,
+            created_time=import_time,
         )
 
     def add_prices(
@@ -182,3 +205,32 @@ class PriceVersionRepository:
                 raise ProductMappingConflictError(
                     f"Google product {product_id!r} already maps to tier {existing_tier}"
                 )
+
+    def _add_import_event(
+        self,
+        *,
+        version_id: str,
+        channel: Channel,
+        from_status: str | None,
+        to_status: str,
+        replaced_version_id: str | None,
+        created_time: str,
+    ) -> None:
+        self._connection.execute(
+            """
+            INSERT INTO version_status_events
+                (event_id, version_id, channel, from_status, to_status,
+                 replaced_version_id, reason, note, actor, created_time)
+            VALUES (?, ?, ?, ?, ?, ?, 'IMPORT_CONFIRMATION', NULL,
+                    'LOCAL_USER', ?)
+            """,
+            (
+                f"EVT_{uuid.uuid4().hex.upper()}",
+                version_id,
+                channel.value,
+                from_status,
+                to_status,
+                replaced_version_id,
+                created_time,
+            ),
+        )
