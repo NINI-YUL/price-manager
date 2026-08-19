@@ -31,7 +31,7 @@ def test_page_defaults_formats_missing_cells_filters_and_two_views(tmp_path: Pat
     assert _column_texts(page, 1) == ["JP", "KR", "US"]
     us_row = _row_for(page, 1, "US")
     assert page.table.item(us_row, 2).text() == "9.99 USD"
-    assert page.table.item(us_row, 3).text() == "10.99 USD  [手动]"
+    assert page.table.item(us_row, 3).text() == "10.99 USD  [手动调价]"
     assert page.table.item(us_row, 4).text() == "—"
     assert page.table.item(us_row, 2).textAlignment() & int(Qt.AlignmentFlag.AlignHCenter)
     for column in range(page.table.columnCount()):
@@ -52,7 +52,7 @@ def test_page_defaults_formats_missing_cells_filters_and_two_views(tmp_path: Pat
     assert page.table.rowCount() == 14
     tier_row = _row_for(page, 0, "USD 9.99")
     assert page.table.item(tier_row, 1).text() == "9.99 USD"
-    assert page.table.item(tier_row, 2).text() == "10.99 USD  [手动]"
+    assert page.table.item(tier_row, 2).text() == "10.99 USD  [手动调价]"
     assert page.table.item(tier_row, 3).text() == "—"
     page.close()
 
@@ -106,9 +106,7 @@ def test_confirmation_refreshes_one_channel_and_preserves_other_selection(tmp_pa
     ios_before = page.selected_versions[Channel.IOS]
 
     with database_session(database_path) as connection:
-        connection.execute(
-            "UPDATE price_versions SET status = 'ARCHIVED' WHERE channel = 'GOOGLE'"
-        )
+        connection.execute("UPDATE price_versions SET status = 'ARCHIVED' WHERE channel = 'GOOGLE'")
         _insert_version(
             connection,
             "GOOGLE_V20260818_002",
@@ -168,6 +166,7 @@ def test_manual_refresh_keeps_query_failure_visible(tmp_path: Path, monkeypatch)
     assert not page.import_button.isVisible()
     page.close()
 
+
 def _application():
     return create_application(["price-library-test"])
 
@@ -178,9 +177,7 @@ def _column_texts(page: PriceLibraryPage, column: int) -> list[str]:
 
 def _row_for(page: PriceLibraryPage, column: int, text: str) -> int:
     return next(
-        row
-        for row in range(page.table.rowCount())
-        if page.table.item(row, column).text() == text
+        row for row in range(page.table.rowCount()) if page.table.item(row, column).text() == text
     )
 
 

@@ -53,9 +53,9 @@ class PriceDetailDialog(QDialog):
         form = QFormLayout()
         adjustment = ""
         if price.adjustment_mode is AdjustmentMode.MANUAL:
-            adjustment = "手动"
+            adjustment = "手动调价"
         elif price.adjustment_mode is AdjustmentMode.AUTOMATIC:
-            adjustment = "自动"
+            adjustment = "自动调价"
         values = (
             ("渠道", CHANNEL_LABELS[price.channel]),
             ("版本", price.version_id),
@@ -105,8 +105,7 @@ class PriceLibraryPage(QWidget):
     @property
     def selected_versions(self) -> dict[Channel, str | None]:
         return {
-            channel: picker.selected_version_id
-            for channel, picker in self.version_pickers.items()
+            channel: picker.selected_version_id for channel, picker in self.version_pickers.items()
         }
 
     @property
@@ -329,9 +328,7 @@ class PriceLibraryPage(QWidget):
     def _populate_currency_options(self) -> None:
         selected = self.currency_combo.currentData()
         enabled = self._enabled_channels()
-        currencies = sorted(
-            {price.currency for price in self._prices if price.channel in enabled}
-        )
+        currencies = sorted({price.currency for price in self._prices if price.channel in enabled})
         self.currency_combo.blockSignals(True)
         self.currency_combo.clear()
         self.currency_combo.addItem("全部币种", None)
@@ -347,11 +344,9 @@ class PriceLibraryPage(QWidget):
             return
         self._cell_prices.clear()
         channels = self._enabled_channels()
-        headers = (
-            ["国家/地区", "国家编码"]
-            if self.current_view == "TIER"
-            else ["USD 档位"]
-        ) + [CHANNEL_LABELS[channel] for channel in channels]
+        headers = (["国家/地区", "国家编码"] if self.current_view == "TIER" else ["USD 档位"]) + [
+            CHANNEL_LABELS[channel] for channel in channels
+        ]
         self.table.clear()
         self.table.setColumnCount(len(headers))
         self.table.setHorizontalHeaderLabels(headers)
@@ -364,7 +359,6 @@ class PriceLibraryPage(QWidget):
             self.import_button.setVisible(False)
             self.status_label.setText(self._query_error)
             return
-
 
         all_versions_missing = not any(self.selected_versions.values())
         self.import_button.setVisible(all_versions_missing)
@@ -434,9 +428,9 @@ class PriceLibraryPage(QWidget):
             return
         text = f"{format_local_price(price.local_price)} {price.currency}"
         if price.adjustment_mode is AdjustmentMode.MANUAL:
-            text += "  [手动]"
+            text += "  [手动调价]"
         elif price.adjustment_mode is AdjustmentMode.AUTOMATIC:
-            text += "  [自动]"
+            text += "  [自动调价]"
         self._set_item(row, column, text, Qt.AlignmentFlag.AlignCenter)
         self._cell_prices[(row, column)] = price
 
@@ -468,9 +462,7 @@ class PriceLibraryPage(QWidget):
         )
 
     def _enabled_channels(self) -> tuple[Channel, ...]:
-        return tuple(
-            channel for channel in Channel if self.channel_checks[channel].isChecked()
-        )
+        return tuple(channel for channel in Channel if self.channel_checks[channel].isChecked())
 
     @staticmethod
     def _set_combo_data(combo: QComboBox, value: object) -> None:

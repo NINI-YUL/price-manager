@@ -133,9 +133,7 @@ def test_wrong_channel_version_is_rejected_without_database_writes(tmp_path: Pat
     service = PriceLibraryService(database_path)
     with database_session(database_path) as connection:
         before = tuple(
-            connection.execute(
-                "SELECT version_id, status FROM price_versions ORDER BY version_id"
-            )
+            connection.execute("SELECT version_id, status FROM price_versions ORDER BY version_id")
         )
         price_count = int(connection.execute("SELECT COUNT(*) FROM channel_prices").fetchone()[0])
 
@@ -150,20 +148,20 @@ def test_wrong_channel_version_is_rejected_without_database_writes(tmp_path: Pat
 
     with database_session(database_path) as connection:
         after = tuple(
-            connection.execute(
-                "SELECT version_id, status FROM price_versions ORDER BY version_id"
-            )
+            connection.execute("SELECT version_id, status FROM price_versions ORDER BY version_id")
         )
         assert [(row["version_id"], row["status"]) for row in after] == [
             (row["version_id"], row["status"]) for row in before
         ]
-        assert connection.execute("SELECT COUNT(*) FROM channel_prices").fetchone()[0] == price_count
+        assert (
+            connection.execute("SELECT COUNT(*) FROM channel_prices").fetchone()[0] == price_count
+        )
 
 
 def test_decimal_display_never_uses_exponents_or_thousands_separators() -> None:
     assert format_local_price(Decimal(1500)) == "1500"
     assert format_local_price(Decimal("0.000001")) == "0.000001"
-    assert format_local_price(Decimal("1234.5600")) == "1234.5600"
+    assert format_local_price(Decimal("1234.5600")) == "1234.56"
     assert format_usd_tier(Decimal("9.99")) == "9.99"
 
 

@@ -85,10 +85,22 @@ class CountryViewRow:
         return next((price for price in self.prices if price.channel is channel), None)
 
 
-def format_local_price(value: Decimal) -> str:
-    """Format a database decimal without exponent notation or extra rounding."""
+def has_extra_price_precision(value: Decimal) -> bool:
+    """Return whether a non-integral value contains more than two meaningful decimals."""
 
-    return format(value, "f")
+    if value == value.to_integral_value():
+        return False
+    return value.normalize().as_tuple().exponent < -2
+
+
+def format_local_price(value: Decimal) -> str:
+    """Show integers without decimals and fractional values with at least two decimals."""
+
+    if value == value.to_integral_value():
+        return format(value.quantize(Decimal(1)), "f")
+    if has_extra_price_precision(value):
+        return format(value, "f")
+    return format(value.quantize(Decimal("0.01")), ".2f")
 
 
 def format_usd_tier(value: Decimal) -> str:

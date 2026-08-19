@@ -25,6 +25,7 @@ from src.models.price_library import (
     VersionStatus,
     format_local_price,
     format_usd_tier,
+    has_extra_price_precision,
 )
 from src.models.version_management import (
     ArchiveInspection,
@@ -68,4 +69,5 @@ __all__ = [
     "VersionSummary",
     "format_local_price",
     "format_usd_tier",
+    "has_extra_price_precision",
 ]

@@ -44,12 +44,12 @@ def test_page_channel_modes_preview_filters_and_confirmation_gate(tmp_path: Path
     page.show_preview(preview, "TASK-UI")
 
     assert page.confirm_button.isEnabled()
-    assert page.price_table.rowCount() == 2
+    assert page.price_proxy.rowCount() == 2
     assert page.issue_table.rowCount() == 1
     assert "接受价格：2" in page.summary_label.text()
     page.country_filter.setCurrentIndex(page.country_filter.findData("JP"))
-    assert page.price_table.rowCount() == 1
-    assert page.price_table.item(0, 0).text() == "JP"
+    assert page.price_proxy.rowCount() == 1
+    assert page.price_proxy.index(0, 0).data() == "JP"
     page.severity_filter.setCurrentIndex(page.severity_filter.findData("ERROR"))
     assert page.issue_table.rowCount() == 0
 

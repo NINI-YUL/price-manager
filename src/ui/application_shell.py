@@ -7,7 +7,9 @@ from pathlib import Path
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QButtonGroup,
+    QFrame,
     QHBoxLayout,
+    QLabel,
     QPushButton,
     QStackedWidget,
     QVBoxLayout,
@@ -34,18 +36,43 @@ class ApplicationShell(QWidget):
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        root = QVBoxLayout(self)
-        navigation = QHBoxLayout()
+        root = QHBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
+
+        self.sidebar = QFrame(self)
+        self.sidebar.setObjectName("navigationSidebar")
+        self.sidebar.setMinimumWidth(176)
+        self.sidebar.setMaximumWidth(210)
+        sidebar_layout = QVBoxLayout(self.sidebar)
+        sidebar_layout.setContentsMargins(14, 18, 14, 18)
+        sidebar_layout.setSpacing(8)
+        product_label = QLabel("渠道价格管理")
+        product_label.setObjectName("sidebarProductLabel")
+        product_label.setStyleSheet("font-size: 16px; font-weight: 600; padding: 4px;")
+        sidebar_layout.addWidget(product_label)
+
         self.navigation_group = QButtonGroup(self)
         self.navigation_group.setExclusive(True)
         self.import_navigation = self._navigation_button("价格导入", "importNavigation")
         self.library_navigation = self._navigation_button("价格库", "libraryNavigation")
         self.version_navigation = self._navigation_button("版本管理", "versionNavigation")
-        navigation.addWidget(self.import_navigation)
-        navigation.addWidget(self.library_navigation)
-        navigation.addWidget(self.version_navigation)
-        navigation.addStretch(1)
-        root.addLayout(navigation)
+        sidebar_layout.addWidget(self.import_navigation)
+        sidebar_layout.addWidget(self.library_navigation)
+        sidebar_layout.addWidget(self.version_navigation)
+        sidebar_layout.addStretch(1)
+        phase_label = QLabel("Phase1 独立闭环")
+        phase_label.setObjectName("sidebarPhaseLabel")
+        phase_label.setStyleSheet("color: #667085; padding: 4px;")
+        sidebar_layout.addWidget(phase_label)
+        self.sidebar.setStyleSheet(
+            "QFrame#navigationSidebar { background: #f5f7fa; border-right: 1px solid #d9dee7; }"
+            "QPushButton { min-height: 40px; text-align: left; padding: 0 14px; "
+            "border: 0; border-radius: 6px; }"
+            "QPushButton:hover { background: #e9eef7; }"
+            "QPushButton:checked { background: #dce8ff; color: #174ea6; font-weight: 600; }"
+        )
+        root.addWidget(self.sidebar)
 
         self.stack = QStackedWidget()
         self.stack.setObjectName("mainPageStack")
@@ -111,6 +138,5 @@ class ApplicationShell(QWidget):
         button = QPushButton(text)
         button.setObjectName(object_name)
         button.setCheckable(True)
-        button.setMinimumWidth(120)
         self.navigation_group.addButton(button)
         return button
