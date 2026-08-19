@@ -6,6 +6,8 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PySide6.QtCore import Qt
+
 from src.database.seed import seed_database
 from src.main import create_application, create_main_window
 from src.models import (
@@ -59,6 +61,8 @@ def test_import_model_localizes_fields_prices_and_filters_without_rebuild(
     assert page.issue_empty_label.text() == "本次解析无异常"
     assert page.price_model.rowCount() == 3
     assert page.price_proxy.rowCount() == 3
+    assert not page.price_table.verticalHeader().isHidden()
+    assert page.price_proxy.headerData(0, Qt.Orientation.Vertical) == "1"
     assert page.price_proxy.index(0, 0).data() == "JP"
     assert page.price_proxy.index(0, 1).data() == "日本"
     assert page.price_proxy.index(0, 4).data() == "150"
