@@ -198,6 +198,11 @@ class PricePreviewFilterProxyModel(QSortFilterProxyModel):
         else:  # PySide6 6.7/6.8 compatibility
             self.invalidateFilter()
 
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+        if orientation == Qt.Orientation.Vertical and role == Qt.ItemDataRole.DisplayRole:
+            return str(section + 1)
+        return super().headerData(section, orientation, role)
+
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
         model = self.sourceModel()
         if not isinstance(model, PricePreviewTableModel):

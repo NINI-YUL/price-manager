@@ -62,7 +62,7 @@ def test_import_model_localizes_fields_prices_and_filters_without_rebuild(
     assert page.price_model.rowCount() == 3
     assert page.price_proxy.rowCount() == 3
     assert not page.price_table.verticalHeader().isHidden()
-    assert page.price_proxy.headerData(0, Qt.Orientation.Vertical) == "1"
+    assert _visible_row_numbers(page) == ["1", "2", "3"]
     assert page.price_proxy.index(0, 0).data() == "JP"
     assert page.price_proxy.index(0, 1).data() == "日本"
     assert page.price_proxy.index(0, 4).data() == "150"
@@ -76,8 +76,10 @@ def test_import_model_localizes_fields_prices_and_filters_without_rebuild(
     assert id(page.price_model) == source_model_id
     assert page.price_model.rowCount() == 3
     assert page.price_proxy.rowCount() == 2
+    assert _visible_row_numbers(page) == ["1", "2"]
     page.tier_filter.setCurrentIndex(page.tier_filter.findData("1.99"))
     assert page.price_proxy.rowCount() == 1
+    assert _visible_row_numbers(page) == ["1"]
     page.close()
 
 
@@ -113,6 +115,13 @@ def test_local_price_display_rule_preserves_values() -> None:
     assert format_local_price(Decimal("1.234")) == "1.234"
     assert not has_extra_price_precision(Decimal("1.20"))
     assert has_extra_price_precision(Decimal("1.234"))
+
+
+def _visible_row_numbers(page: ImportPage) -> list[str]:
+    return [
+        str(page.price_proxy.headerData(row, Qt.Orientation.Vertical))
+        for row in range(page.price_proxy.rowCount())
+    ]
 
 
 def _application():
