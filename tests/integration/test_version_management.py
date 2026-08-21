@@ -152,7 +152,9 @@ def test_manual_activation_is_atomic_and_audited(tmp_path: Path) -> None:
         "GOOGLE_V20260817_001": "ACTIVE",
         "GOOGLE_V20260818_001": "ARCHIVED",
     }
-    assert [(event["version_id"], event["from_status"], event["to_status"]) for event in events] == [
+    assert [
+        (event["version_id"], event["from_status"], event["to_status"]) for event in events
+    ] == [
         ("GOOGLE_V20260818_001", "ACTIVE", "ARCHIVED"),
         ("GOOGLE_V20260817_001", "ARCHIVED", "ACTIVE"),
     ]
@@ -309,7 +311,7 @@ def test_v3_migration_creates_baseline_event(tmp_path: Path) -> None:
 
     with database_session(database_path) as migrated:
         event = migrated.execute("SELECT * FROM version_status_events").fetchone()
-        assert migrated.execute("PRAGMA user_version").fetchone()[0] == 4
+        assert migrated.execute("PRAGMA user_version").fetchone()[0] == 5
         assert event["event_id"] == "MIGRATION_WEB_V20260817_001"
         assert event["from_status"] is None
         assert event["to_status"] == "ACTIVE"

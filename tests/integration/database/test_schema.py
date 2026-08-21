@@ -21,9 +21,35 @@ def test_schema_initialization_is_idempotent_and_reference_tables_are_empty(
 
     with database_session(database_path) as connection:
         assert list_business_tables(connection) == BUSINESS_TABLES
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 4
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 5
         assert connection.execute("SELECT COUNT(*) FROM countries").fetchone()[0] == 0
         assert connection.execute("SELECT COUNT(*) FROM price_tiers").fetchone()[0] == 0
+
+
+def test_exchange_rate_snapshots_reject_update_and_delete(tmp_path: Path) -> None:
+    database_path = tmp_path / "immutable-exchange-rate-snapshot.db"
+    initialize_database(database_path)
+    with database_session(database_path) as connection:
+        connection.execute(
+            """
+            INSERT INTO exchange_rate_snapshots
+                (snapshot_id, provider, base_currency, provider_updated_at,
+                 provider_next_update_at, fetched_at, rates_json)
+            VALUES ('FX_USD_20260820T000000Z', 'EXCHANGE_RATE_API', 'USD',
+                    '2026-08-20T00:00:00+00:00', '2026-08-21T00:00:00+00:00',
+                    '2026-08-20T00:01:00+00:00', '{"USD":"1","JPY":"150"}')
+            """
+        )
+
+    with pytest.raises(sqlite3.IntegrityError), database_session(database_path) as connection:
+        connection.execute('UPDATE exchange_rate_snapshots SET rates_json = \'{"USD":"1"}\'')
+
+    with pytest.raises(sqlite3.IntegrityError), database_session(database_path) as connection:
+        connection.execute("DELETE FROM exchange_rate_snapshots")
+
+    with database_session(database_path) as connection:
+        saved = connection.execute("SELECT rates_json FROM exchange_rate_snapshots").fetchone()[0]
+    assert saved == '{"USD":"1","JPY":"150"}'
 
 
 def test_connection_enables_foreign_keys(tmp_path: Path) -> None:
@@ -167,6 +193,8 @@ def test_schema_declares_required_indexes(tmp_path: Path) -> None:
         "ux_import_tasks_version",
         "ix_version_status_events_version_created",
         "ix_version_status_events_channel_created",
+        "ix_exchange_rate_snapshots_updated",
+        "ix_exchange_rate_fetch_logs_status_requested",
     }
     with database_session(database_path) as connection:
         actual = {
@@ -210,7 +238,7 @@ def test_adjustment_mode_constraint_and_v1_migration(tmp_path: Path) -> None:
     with database_session(database_path) as migrated:
         columns = {row["name"] for row in migrated.execute("PRAGMA table_info(channel_prices)")}
         assert "adjustment_mode" in columns
-        assert migrated.execute("PRAGMA user_version").fetchone()[0] == 4
+        assert migrated.execute("PRAGMA user_version").fetchone()[0] == 5
         saved = migrated.execute("SELECT * FROM channel_prices").fetchone()
         assert saved["local_price"] == 0.99
         assert saved["adjustment_mode"] is None
@@ -278,7 +306,7 @@ def test_v2_import_task_migration_adds_version_link_atomically(tmp_path: Path) -
     with database_session(database_path) as migrated:
         columns = {row["name"] for row in migrated.execute("PRAGMA table_info(import_tasks)")}
         assert "version_id" in columns
-        assert migrated.execute("PRAGMA user_version").fetchone()[0] == 4
+        assert migrated.execute("PRAGMA user_version").fetchone()[0] == 5
         assert (
             migrated.execute(
                 "SELECT version_id FROM import_tasks WHERE task_id = 'OLD-TASK'"
@@ -307,6 +335,55 @@ def test_failed_schema_upgrade_rolls_back(tmp_path: Path) -> None:
         columns = {row["name"] for row in connection.execute("PRAGMA table_info(channel_prices)")}
         assert columns == {"id"}
         assert connection.execute("PRAGMA user_version").fetchone()[0] == 1
+
+
+def test_v4_migration_adds_exchange_tables_without_changing_phase1_rows(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "v4-to-v5.db"
+    initialize_database(database_path)
+    _seed_price_dependencies(database_path)
+    with database_session(database_path) as connection:
+        connection.execute(
+            """
+            INSERT INTO channel_prices
+                (channel, country_code, usd_tier, currency, local_price,
+                 version_id, created_time)
+            VALUES ('GOOGLE', 'JP', 9.99, 'JPY', 1500,
+                    'GOOGLE_V20260816_001', '2026-08-16T23:00:00+08:00')
+            """
+        )
+        before = tuple(
+            connection.execute(
+                """
+                SELECT channel, country_code, usd_tier, currency, local_price,
+                       version_id, created_time
+                FROM channel_prices
+                """
+            ).fetchone()
+        )
+        connection.execute("DROP TABLE exchange_rate_fetch_logs")
+        connection.execute("DROP TABLE exchange_rate_snapshots")
+        connection.execute("PRAGMA user_version = 4")
+
+    initialize_database(database_path)
+
+    with database_session(database_path) as connection:
+        assert {
+            "exchange_rate_snapshots",
+            "exchange_rate_fetch_logs",
+        } <= list_business_tables(connection)
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 5
+        after = tuple(
+            connection.execute(
+                """
+                SELECT channel, country_code, usd_tier, currency, local_price,
+                       version_id, created_time
+                FROM channel_prices
+                """
+            ).fetchone()
+        )
+    assert after == before
 
 
 def _seed_price_dependencies(database_path: Path) -> None:

@@ -29,6 +29,6 @@ def test_acceptance_environment_initializes_schema_and_seed_data(tmp_path: Path)
     assert paths.exports.is_dir()
 
     with sqlite3.connect(database_path) as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 4
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 5
         assert connection.execute("SELECT COUNT(*) FROM countries").fetchone()[0] == 191
         assert connection.execute("SELECT COUNT(*) FROM price_tiers").fetchone()[0] == 14

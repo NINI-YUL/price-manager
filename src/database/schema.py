@@ -1,4 +1,4 @@
-"""Idempotent Phase1 SQLite schema initialization."""
+"""Idempotent Phase1 and Phase2 SQLite schema initialization."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 from src.config.settings import DATABASE_PATH
 from src.database.connection import DatabasePath, open_database
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 BUSINESS_TABLES = frozenset(
     {
         "countries",
@@ -18,6 +18,8 @@ BUSINESS_TABLES = frozenset(
         "price_versions",
         "import_tasks",
         "version_status_events",
+        "exchange_rate_snapshots",
+        "exchange_rate_fetch_logs",
     }
 )
 
@@ -122,6 +124,47 @@ CREATE TABLE IF NOT EXISTS version_status_events (
         ON UPDATE RESTRICT ON DELETE RESTRICT
 );
 
+CREATE TABLE IF NOT EXISTS exchange_rate_snapshots (
+    id INTEGER PRIMARY KEY,
+    snapshot_id TEXT NOT NULL UNIQUE CHECK (length(trim(snapshot_id)) > 0),
+    provider TEXT NOT NULL CHECK (provider = 'EXCHANGE_RATE_API'),
+    base_currency TEXT NOT NULL CHECK (base_currency = 'USD'),
+    provider_updated_at TEXT NOT NULL
+        CHECK (length(trim(provider_updated_at)) > 0),
+    provider_next_update_at TEXT NOT NULL
+        CHECK (length(trim(provider_next_update_at)) > 0),
+    fetched_at TEXT NOT NULL CHECK (length(trim(fetched_at)) > 0),
+    rates_json TEXT NOT NULL CHECK (length(trim(rates_json)) > 0),
+    UNIQUE (provider, base_currency, provider_updated_at)
+);
+
+CREATE TABLE IF NOT EXISTS exchange_rate_fetch_logs (
+    id INTEGER PRIMARY KEY,
+    log_id TEXT NOT NULL UNIQUE CHECK (length(trim(log_id)) > 0),
+    trigger TEXT NOT NULL CHECK (trigger IN ('AUTO', 'MANUAL')),
+    status TEXT NOT NULL CHECK (status IN ('SUCCESS', 'NOT_MODIFIED', 'FAILED')),
+    requested_at TEXT NOT NULL CHECK (length(trim(requested_at)) > 0),
+    completed_at TEXT NOT NULL CHECK (length(trim(completed_at)) > 0),
+    error_message TEXT,
+    snapshot_id TEXT,
+    FOREIGN KEY (snapshot_id) REFERENCES exchange_rate_snapshots(snapshot_id)
+        ON UPDATE RESTRICT ON DELETE RESTRICT
+);
+
+
+CREATE TRIGGER IF NOT EXISTS tr_exchange_rate_snapshots_immutable_update
+BEFORE UPDATE ON exchange_rate_snapshots
+BEGIN
+    SELECT RAISE(ABORT, 'exchange-rate snapshots are immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS tr_exchange_rate_snapshots_immutable_delete
+BEFORE DELETE ON exchange_rate_snapshots
+BEGIN
+    SELECT RAISE(ABORT, 'exchange-rate snapshots are permanent');
+END;
+
+
 CREATE UNIQUE INDEX IF NOT EXISTS ux_active_version_per_channel
 ON price_versions(channel) WHERE status = 'ACTIVE';
 
@@ -139,6 +182,13 @@ ON version_status_events(version_id, created_time);
 
 CREATE INDEX IF NOT EXISTS ix_version_status_events_channel_created
 ON version_status_events(channel, created_time);
+
+CREATE INDEX IF NOT EXISTS ix_exchange_rate_snapshots_updated
+ON exchange_rate_snapshots(provider_updated_at DESC);
+
+CREATE INDEX IF NOT EXISTS ix_exchange_rate_fetch_logs_status_requested
+ON exchange_rate_fetch_logs(status, requested_at);
+
 """
 
 POST_MIGRATION_SQL = """
@@ -168,7 +218,7 @@ FROM price_versions;
 
 
 def initialize_schema(connection: sqlite3.Connection) -> None:
-    """Create or migrate the Phase1 schema atomically and idempotently."""
+    """Create or migrate the Phase1 and Phase2 schema atomically and idempotently."""
 
     current_version = int(connection.execute("PRAGMA user_version").fetchone()[0])
     if current_version > SCHEMA_VERSION:
@@ -237,7 +287,7 @@ def initialize_database(database_path: DatabasePath = DATABASE_PATH) -> Path:
 
 
 def list_business_tables(connection: sqlite3.Connection) -> set[str]:
-    """Return only the seven application tables, excluding SQLite internals."""
+    """Return all nine application tables, excluding SQLite internals."""
 
     rows = connection.execute(
         "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"

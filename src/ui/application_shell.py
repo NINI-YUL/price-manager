@@ -1,4 +1,4 @@
-"""Main navigation shell shared by all Phase1 pages."""
+"""Main navigation shell shared by Phase1 operations and Phase2 analysis."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 
 from src.config.settings import DATABASE_PATH, RUNTIME_PATHS
 from src.models import Channel, ConfirmationResult, VersionActivationResult
+from src.ui.exchange_rate_analysis_page import ExchangeRateAnalysisPage
 from src.ui.import_page import ImportPage
 from src.ui.price_library_page import PriceLibraryPage
 from src.ui.version_management_page import VersionManagementPage
@@ -27,12 +28,14 @@ class ApplicationShell(QWidget):
     IMPORT_INDEX = 0
     LIBRARY_INDEX = 1
     VERSION_INDEX = 2
+    ANALYSIS_INDEX = 3
 
     def __init__(
         self,
         database_path=DATABASE_PATH,
         *,
         archives_root: str | Path = RUNTIME_PATHS.archives,
+        auto_exchange_rate_refresh: bool = False,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -57,11 +60,15 @@ class ApplicationShell(QWidget):
         self.import_navigation = self._navigation_button("价格导入", "importNavigation")
         self.library_navigation = self._navigation_button("价格库", "libraryNavigation")
         self.version_navigation = self._navigation_button("版本管理", "versionNavigation")
+        self.analysis_navigation = self._navigation_button(
+            "汇率分析", "exchangeRateAnalysisNavigation"
+        )
         sidebar_layout.addWidget(self.import_navigation)
         sidebar_layout.addWidget(self.library_navigation)
         sidebar_layout.addWidget(self.version_navigation)
+        sidebar_layout.addWidget(self.analysis_navigation)
         sidebar_layout.addStretch(1)
-        phase_label = QLabel("Phase1 独立闭环")
+        phase_label = QLabel("Phase2 只读汇率分析")
         phase_label.setObjectName("sidebarPhaseLabel")
         phase_label.setStyleSheet("color: #667085; padding: 4px;")
         sidebar_layout.addWidget(phase_label)
@@ -87,19 +94,27 @@ class ApplicationShell(QWidget):
             archives_root=archives_root,
             parent=self.stack,
         )
+        self.exchange_rate_analysis_page = ExchangeRateAnalysisPage(
+            database_path,
+            parent=self.stack,
+        )
         self.stack.addWidget(self.import_page)
         self.stack.addWidget(self.price_library_page)
         self.stack.addWidget(self.version_management_page)
+        self.stack.addWidget(self.exchange_rate_analysis_page)
         root.addWidget(self.stack, 1)
 
         self.import_navigation.clicked.connect(self.show_import)
         self.library_navigation.clicked.connect(self.show_library)
         self.version_navigation.clicked.connect(self.show_versions)
         self.import_page.confirmation_succeeded.connect(self._handle_confirmation)
+        self.analysis_navigation.clicked.connect(self.show_analysis)
         self.price_library_page.navigate_to_import.connect(self.show_import)
         self.version_management_page.view_in_library.connect(self._show_library_version)
         self.version_management_page.version_activated.connect(self._handle_activation)
         self.show_import()
+        if auto_exchange_rate_refresh:
+            self.exchange_rate_analysis_page.start_auto_refresh()
 
     def show_import(self) -> None:
         self.stack.setCurrentIndex(self.IMPORT_INDEX)
@@ -116,6 +131,11 @@ class ApplicationShell(QWidget):
         self.version_navigation.setChecked(True)
 
     @Slot(object)
+    def show_analysis(self) -> None:
+        self.exchange_rate_analysis_page.activate()
+        self.stack.setCurrentIndex(self.ANALYSIS_INDEX)
+        self.analysis_navigation.setChecked(True)
+
     def _handle_confirmation(self, result: ConfirmationResult) -> None:
         self.price_library_page.handle_confirmation(result)
         self.version_management_page.refresh()

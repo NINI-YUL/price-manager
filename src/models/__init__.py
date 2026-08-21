@@ -5,6 +5,13 @@ from src.models.confirmation import (
     ConfirmationError,
     ConfirmationResult,
 )
+from src.models.exchange_rate import (
+    ExchangeRateRefreshResult,
+    ExchangeRateSnapshot,
+    ProviderRateBundle,
+    RateFetchTrigger,
+    RateRefreshStatus,
+)
 from src.models.import_preview import (
     AdjustmentMode,
     Channel,
@@ -14,6 +21,14 @@ from src.models.import_preview import (
     ImportTaskStatus,
     IssueSeverity,
     StandardPrice,
+)
+from src.models.price_analysis import (
+    DeviationLevel,
+    PriceAnalysisRow,
+    format_deviation_percent,
+    format_exchange_rate,
+    format_signed_difference,
+    format_theoretical_price,
 )
 from src.models.price_library import (
     Country,
@@ -49,14 +64,21 @@ __all__ = [
     "ConfirmationResult",
     "Country",
     "CountryViewRow",
+    "DeviationLevel",
+    "ExchangeRateRefreshResult",
+    "ExchangeRateSnapshot",
     "ImportIssue",
     "ImportPreview",
     "ImportStatistics",
     "ImportTaskStatus",
     "IssueSeverity",
     "LibraryPrice",
+    "PriceAnalysisRow",
     "PriceLibraryCatalog",
     "PriceVersion",
+    "ProviderRateBundle",
+    "RateFetchTrigger",
+    "RateRefreshStatus",
     "StandardPrice",
     "TierViewRow",
     "VersionActivationAssessment",
@@ -67,7 +89,11 @@ __all__ = [
     "VersionStatus",
     "VersionStatusEvent",
     "VersionSummary",
+    "format_deviation_percent",
+    "format_exchange_rate",
     "format_local_price",
+    "format_signed_difference",
+    "format_theoretical_price",
     "format_usd_tier",
     "has_extra_price_precision",
 ]

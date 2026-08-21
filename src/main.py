@@ -36,8 +36,9 @@ def create_main_window(
     database_path=DATABASE_PATH,
     *,
     archives_path=RUNTIME_PATHS.archives,
+    auto_exchange_rate_refresh: bool = False,
 ):
-    """Build the Phase1 main window with import, price-library, and version navigation."""
+    """Build the Phase1 operations plus Phase2 read-only analysis window."""
 
     from PySide6.QtWidgets import QMainWindow
 
@@ -47,7 +48,12 @@ def create_main_window(
     window.setWindowTitle(window_title())
     window.setMinimumSize(1180, 720)
     window.setCentralWidget(
-        ApplicationShell(database_path, archives_root=archives_path, parent=window)
+        ApplicationShell(
+            database_path,
+            archives_root=archives_path,
+            auto_exchange_rate_refresh=auto_exchange_rate_refresh,
+            parent=window,
+        )
     )
     return window
 
@@ -62,7 +68,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     ensure_runtime_directories()
     seed_database()
     application = create_application(qt_args)
-    window = create_main_window()
+    window = create_main_window(auto_exchange_rate_refresh=not smoke_test)
+    application.aboutToQuit.connect(
+        window.centralWidget().exchange_rate_analysis_page.shutdown_for_application_exit
+    )
     window.show()
 
     if smoke_test:
