@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import os
+from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QComboBox, QStyle
 
 from src.database.seed import seed_database
 from src.main import create_application, create_main_window
@@ -44,6 +46,26 @@ def test_left_navigation_and_import_splitter_structure(tmp_path: Path) -> None:
     assert shell.import_page.issue_group.title() == "解析问题（错误/警告）"
     assert shell.import_page.inspection_splitter.widget(0) is shell.import_page.detail_group
     assert shell.import_page.inspection_splitter.widget(1) is shell.import_page.issue_group
+    window.close()
+
+def test_import_filters_reserve_width_for_full_text(tmp_path: Path) -> None:
+    application = _application()
+    database_path = tmp_path / "filter-width.db"
+    seed_database(database_path)
+    window = create_main_window(database_path, archives_path=tmp_path / "archives")
+    window.resize(1180, 720)
+    window.show()
+    application.processEvents()
+    page = window.centralWidget().import_page
+
+    page.show_preview(_filter_width_preview(), "TASK-FILTER-WIDTH")
+    application.processEvents()
+
+    for combo in (page.country_filter, page.tier_filter):
+        required_width = _required_combo_width(combo)
+        assert combo.minimumWidth() >= required_width
+        assert combo.width() >= required_width
+        assert combo.view().minimumWidth() >= required_width
     window.close()
 
 
@@ -122,6 +144,40 @@ def _visible_row_numbers(page: ImportPage) -> list[str]:
         str(page.price_proxy.headerData(row, Qt.Orientation.Vertical))
         for row in range(page.price_proxy.rowCount())
     ]
+
+
+def _filter_width_preview() -> ImportPreview:
+    preview = _ios_preview(issues=())
+    records = preview.records + (
+        _record("AE", "AED", "18.99", "4.99", AdjustmentMode.MANUAL),
+    )
+    statistics = replace(
+        preview.statistics,
+        accepted_record_count=len(records),
+        country_count=3,
+        currency_count=3,
+        tier_count=3,
+        manual_adjustment_count=2,
+    )
+    return replace(preview, records=records, statistics=statistics)
+
+
+def _required_combo_width(combo: QComboBox) -> int:
+    text_width = max(
+        combo.fontMetrics().horizontalAdvance(combo.itemText(index))
+        for index in range(combo.count())
+    )
+    frame_width = combo.style().pixelMetric(
+        QStyle.PixelMetric.PM_ComboBoxFrameWidth,
+        None,
+        combo,
+    )
+    arrow_width = combo.style().pixelMetric(
+        QStyle.PixelMetric.PM_ScrollBarExtent,
+        None,
+        combo,
+    )
+    return text_width + frame_width * 2 + arrow_width + 12
 
 
 def _application():

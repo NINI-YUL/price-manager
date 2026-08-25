@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QSplitter,
+    QStyle,
     QTableView,
     QTableWidget,
     QTableWidgetItem,
@@ -491,6 +492,8 @@ class ImportPage(QWidget):
         self.tier_filter.addItem("全部档位", None)
         for tier in sorted({record.usd_tier for record in self._preview.records}):
             self.tier_filter.addItem(f"{tier:.2f}", str(tier))
+        for combo in (self.country_filter, self.tier_filter):
+            _reserve_combo_width(combo)
         self.country_filter.blockSignals(False)
         self.tier_filter.blockSignals(False)
 
@@ -607,3 +610,28 @@ class ImportPage(QWidget):
             self.status_label.setText(
                 f"发现 {len(orphans)} 个未关联归档，请人工检查；程序不会自动删除。"
             )
+
+
+def _reserve_combo_width(combo: QComboBox) -> None:
+    combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+    text_width = max(
+        combo.fontMetrics().horizontalAdvance(combo.itemText(index))
+        for index in range(combo.count())
+    )
+    frame_width = combo.style().pixelMetric(
+        QStyle.PixelMetric.PM_ComboBoxFrameWidth,
+        None,
+        combo,
+    )
+    arrow_width = combo.style().pixelMetric(
+        QStyle.PixelMetric.PM_ScrollBarExtent,
+        None,
+        combo,
+    )
+    minimum_width = max(
+        combo.sizeHint().width(),
+        text_width + frame_width * 2 + arrow_width + 12,
+    )
+    combo.setMinimumWidth(minimum_width)
+    combo.view().setMinimumWidth(minimum_width)
+    combo.updateGeometry()
