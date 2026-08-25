@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 PROJECT_NAME = "多渠道本地化价格管理工具"
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATABASE_FILENAME = "price_manager.db"
 
